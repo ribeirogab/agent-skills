@@ -15,7 +15,7 @@ Report results as a table. Any `FAIL` is surfaced and the user is asked: "Want m
 | 2 | constitution.md has no surviving placeholders | FAIL — line 14: "{{Project Name}}" |
 | ... | ... | ... |
 
-### Result: 11/12 PASS — 1 FAIL needs attention
+### Result: 12/13 PASS — 1 FAIL needs attention
 ```
 
 ## Checks
@@ -159,12 +159,24 @@ grep -nH '{{' context/_index/*.md && echo FAIL || echo PASS
 
 Fix: re-substitute `{{Project Name}}` (and any other surviving `{{}}` placeholder) in the offending file with the project name from Prerequisites. Note: `templates/*.md` and `specs/_template/*.md` are Group A (templates) and **legitimately retain** their `{{}}` placeholders — do not run this check against them.
 
+### 13. Spec template carries an `## Acceptance Criteria` section
+
+Every spec produced from `_template/spec.md` must inherit a structured Acceptance Criteria section so the behaviour harness has something concrete to verify. If the heading was deleted from the template, every future spec loses it silently — `/harness-review-spec` would have nothing to enforce.
+
+```bash
+grep -q '^## Acceptance Criteria$' context/specs/_template/spec.md \
+  && echo PASS \
+  || echo "FAIL: missing '## Acceptance Criteria' heading in _template/spec.md"
+```
+
+Fix: re-create `_template/spec.md` from the spec block in `references/vault-files.md` — the canonical template includes the section with its rules and examples.
+
 ## When everything passes
 
 Report:
 
 ```
-## Phase 5 — Validation: 12/12 PASS
+## Phase 5 — Validation: 13/13 PASS
 
 Harness is structurally sound.
 ```
