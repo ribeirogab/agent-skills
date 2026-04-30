@@ -1,0 +1,155 @@
+---
+name: skill-improver
+description: Audits an existing Claude Code skill against Anthropic's canonical authoring rules — frontmatter validation, directory layout, SKILL.md body style, progressive disclosure, description quality, and degrees-of-freedom appropriateness — and applies improvements only after the user confirms each one. The skill's stated purpose (its description field) is preserved verbatim — proposals that risk reducing trigger accuracy or degrading output quality are flagged before applying. Use this skill whenever the user mentions improving, auditing, refactoring, optimizing, reviewing, fixing, or polishing an existing skill at a known path, even when they don't explicitly say "best practices". Do NOT use to create a skill from scratch (that is `skill-creator`). Do NOT use to grade a skill's runtime output quality with real eval prompts (that is `skill-creator`'s evaluation workflow).
+---
+
+# Skill Improver
+
+Audit a target skill against canonical authoring rules and apply improvements that preserve the skill's stated purpose.
+
+## When to invoke
+
+You are invoked when a user wants to improve, audit, refactor, optimize, or review an existing Claude Code skill at a known path. Common phrasings: "improve this skill", "audit the skill at <path>", "refactor SKILL.md", "is this skill following best practices?", "fix issues in <skill>".
+
+If the user wants to **create** a skill from scratch, redirect to `skill-creator`. If the user wants to **evaluate** a skill's runtime quality on real test prompts (does it produce good outputs?), redirect to `skill-creator`'s eval workflow — that requires running the skill against real prompts in subagents and is a different workflow.
+
+## Core principle: preserve purpose, never regress
+
+The target skill's `description` field is the source of truth for what the skill is supposed to do. Treat it as the skill's constitution. Every proposed change is checked against three preservation rules:
+
+1. **Purpose preservation.** The change must not alter what the skill is supposed to do. Rewriting the description's *meaning* is out of scope — that is a redesign, not an improvement. Wording polish is allowed; semantic shifts are not.
+2. **Trigger preservation.** The change must not reduce the description's coverage of trigger phrases, file types, contexts, or negative cases. If a sibling skill could be confused, the negative trigger stays.
+3. **Output preservation.** The change must not remove instructions, examples, or scripts the skill relies on for output quality. Removing redundant prose is fine; removing load-bearing guidance is not.
+
+A proposal that fails any of the three is not applied automatically. It is surfaced as a flagged proposal with the regression risk explained, so the user can decide.
+
+The phrase "do no harm" is more important here than "be thorough". If you cannot tell whether a change is safe, default to surfacing it as a flagged proposal rather than applying it.
+
+## Workflow
+
+Copy this checklist into the conversation and tick items as you progress:
+
+```
+- [ ] 1. Locate the target skill (resolve any symlinks)
+- [ ] 2. Read SKILL.md and inventory the directory tree
+- [ ] 3. State the preserved purpose (quote the description verbatim)
+- [ ] 4. Audit against the canonical rules (load references/audit-checklist.md)
+- [ ] 5. Categorize findings: critical / structural / stylistic / opportunity
+- [ ] 6. Draft proposals with regression-risk annotations
+- [ ] 7. Confirm with the user, then apply only what was accepted
+- [ ] 8. Re-audit to verify no new violations
+```
+
+### Step 1: Locate the target skill
+
+Ask the user for the skill's path if not already provided. Common locations:
+
+```
+<repo>/.claude/skills/<name>/
+<repo>/skills/<name>/
+~/.claude/skills/<name>/
+```
+
+If the path is a symlink, resolve it with `readlink` or `readlink -f` and operate on the canonical source. Editing through a symlink works for files, but you must know whether the source is shared (e.g., a vendored skill) before applying changes — improvements to a symlinked source affect every consumer of that symlink.
+
+### Step 2: Read and inventory
+
+Run, in parallel:
+
+```bash
+cat <skill-path>/SKILL.md
+ls -laR <skill-path>/
+wc -l <skill-path>/SKILL.md
+```
+
+Record:
+- Frontmatter values: `name`, `description`, optional fields (`license`, `compatibility`, `allowed-tools`, `metadata`).
+- Body line count of `SKILL.md`.
+- Top-level contents: which canonical dirs exist (`scripts/`, `references/`, `assets/`), which non-canonical dirs exist (e.g., `agents/`, `eval-viewer/`, `scaffold/`), which forbidden files exist (e.g., `README.md` directly inside the skill folder).
+- Symlinks, if any.
+- Reference depth (any file under `references/<sub>/<file>.md` is a violation).
+
+### Step 3: State the preserved purpose
+
+Quote the existing `description` verbatim back to the user, then explicitly commit to preserving it:
+
+> "Preserved purpose: `<description value>`.
+> Improvements will polish wording, structure, and adherence to authoring rules — they will not change what this skill is supposed to do.
+> Confirm to proceed, or tell me to redesign the purpose first."
+
+This step is non-negotiable. If the user wants the skill to do something different, redirect them to `skill-creator` for a redesign — that is not what this skill is for.
+
+### Step 4: Audit
+
+Read [references/audit-checklist.md](references/audit-checklist.md) and apply each section to the target. Each finding must record:
+
+- **Section + item** from the checklist.
+- **Severity** (Critical / Structural / Stylistic / Opportunity).
+- **Location**: file path + line number when applicable.
+- **Quote** of the offending content.
+- **Rule** the finding violates (one-line summary; canonical source is the checklist).
+
+If the audit returns no findings at any severity, report that and stop — do not invent improvements.
+
+### Step 5: Categorize findings
+
+- **Critical** — the skill will silently fail to load. Frontmatter violations, wrong filename casing, name reserved-word collision.
+- **Structural** — layout violations. Nested references, `README.md` inside the skill folder, kebab-case violations on the folder name, non-canonical dirs not referenced from `SKILL.md`.
+- **Stylistic** — body style and prose. Length over 500 lines, first/second-person voice, vague description, missing negative triggers, inconsistent terminology, absolute or backslash paths, unqualified MCP tool names, time-sensitive prose embedded in main flow.
+- **Opportunity** — improvements that aren't strictly violations but would help. Better progressive disclosure, more appropriate degrees of freedom for a fragile section, missing validate-fix loop on a quality-critical step, missing checklist on a multi-step workflow, scripts that punt errors instead of solving.
+
+Surface counts up front so the user can prioritize: "Found 0 critical, 2 structural, 5 stylistic, 3 opportunities."
+
+### Step 6: Draft proposals with regression-risk annotations
+
+For each finding, write a concrete change. Show enough context that the user can judge:
+
+- The exact diff (or the new text + replacement target).
+- A one-line **why** that explains the rule being applied.
+- A one-line **regression risk** annotation:
+  - `None` — purely formatting (whitespace, header level, link format).
+  - `Low` — rewording that preserves all triggers and meaning.
+  - `Medium` — narrows or expands triggering coverage; flag for confirmation.
+  - `High` — changes load-bearing instructions, removes scripts, deletes files. Always require confirmation.
+
+Group proposals by severity so the user can accept all critical/structural in one pass and triage opportunities individually.
+
+### Step 7: Confirm and apply
+
+Get explicit user confirmation before applying. Treat silence as "not yet confirmed" — do not apply on assumption.
+
+When applying:
+- Use the `Edit` tool for in-place edits to existing files.
+- Create files for new references; never inline content that should live in `references/`.
+- Delete forbidden files (e.g., `README.md` inside the skill folder) only after explicit confirmation.
+- Preserve file modes on scripts (`chmod +x` if the script was executable).
+
+### Step 8: Re-audit
+
+Run the audit again on the modified skill. Confirm:
+- No critical or structural findings remain.
+- No new findings were introduced by the changes.
+- Body line count after changes is within budget.
+
+Show the user a final diff summary and a short report:
+
+```
+Skill improved: <skill-name>
+- Critical findings: <before> → <after>
+- Structural findings: <before> → <after>
+- Stylistic findings: <before> → <after>
+- Body line count: <before> → <after>
+- Files changed: <list>
+- Files added: <list>
+- Files deleted: <list>
+- Preserved description: "<verbatim>"
+```
+
+## Anti-patterns to avoid
+
+- **Do not change the description's meaning.** Polishing wording is allowed; rewriting purpose is not. If the description is genuinely wrong, surface that as a flagged proposal and stop until the user redirects to `skill-creator`.
+- **Do not silently trim load-bearing prose.** A long body is allowed if it is genuinely doing work. Length is an *opportunity* finding, not a critical one.
+- **Do not delete non-canonical directories without confirmation.** `agents/`, `eval-viewer/`, `scaffold/`, and similar may be load-bearing for skills that legitimately go beyond Anthropic's canonical layout. Flag them as "non-canonical, referenced from SKILL.md → preserved" or "non-canonical, NOT referenced from SKILL.md → flag for the user".
+- **Do not apply changes without explicit confirmation** for `Medium` or `High` regression risk.
+- **Do not invent findings.** If the skill is clean, say so. The bar for an opportunity finding is "this would meaningfully help"; not "I could write a sentence about it".
+- **Do not propose changes that would themselves violate the rules.** A proposed improvement that adds nested references, introduces backslash paths, or breaks the description's third-person voice is itself a regression — discard and reformulate.
