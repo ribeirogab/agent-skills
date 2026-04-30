@@ -14,7 +14,7 @@ _(none yet)_
 
 ## `severity: important`
 
-_(none yet)_
+- [[../rules/skill-validation-requirements|Skill validation requirements (frontmatter and folder)]] — hard format constraints from Anthropic's runtime validators; violating them silently fails to load the skill.
 
 ## `severity: advisory`
 
