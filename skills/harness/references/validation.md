@@ -90,23 +90,13 @@ done
 
 Fix: re-write from `references/vault-files.md`.
 
-### 7. `.gitignore` contains the four obsidian patterns
+### 7. `.gitignore` ignores the entire Obsidian config directory
 
 ```bash
-patterns=(
-  "context/.obsidian/workspace.json"
-  "context/.obsidian/workspace-mobile.json"
-  "context/.obsidian/cache"
-  "context/.obsidian/plugins/*/data.json"
-)
-missing=()
-for p in "${patterns[@]}"; do
-  grep -qF "$p" .gitignore 2>/dev/null || missing+=("$p")
-done
-[ ${#missing[@]} -eq 0 ] && echo PASS || printf 'FAIL — missing: %s\n' "${missing[@]}"
+grep -qE '^context/\.obsidian/?$' .gitignore 2>/dev/null && echo PASS || echo FAIL
 ```
 
-Fix: append the missing lines to `.gitignore`.
+FAIL means `.gitignore` is missing the `context/.obsidian/` line (or still has the older fine-grained patterns). Fix: replace any old per-file Obsidian patterns with the single line `context/.obsidian/`.
 
 ### 8. `context/specs/` contains no folder without date prefix
 

@@ -61,18 +61,17 @@ Actively scan `context/specs/` (excluding `_template/`) — any folder whose nam
 
 Pull the date from the folder's `spec.md` frontmatter `created:` field when present; if absent, ask the user. **Never rename without confirmation.**
 
-### .gitignore contains obsidian workspace exclusions
+### .gitignore ignores the entire Obsidian config directory
 
-The repo's `.gitignore` must contain these four lines (or equivalents):
+The repo's `.gitignore` must contain a pattern that ignores `context/.obsidian/` in full:
 
 ```
-context/.obsidian/workspace.json
-context/.obsidian/workspace-mobile.json
-context/.obsidian/cache
-context/.obsidian/plugins/*/data.json
+context/.obsidian/
 ```
 
-If the file is missing or any line is absent, status is `DRIFT` (or `MISSING` for the file itself).
+Rationale: Obsidian rewrites every file under `context/.obsidian/` on each vault open, which creates constant `git status` noise. The whole directory is machine-local. The harness still scaffolds the three config JSONs locally so first-time Obsidian opens get the right wikilink defaults — they just are never tracked.
+
+If `.gitignore` is missing, or contains the older fine-grained pattern set (`workspace.json`, `cache`, `plugins/*/data.json`) instead of the directory-level ignore, status is `DRIFT`. Fix: replace the old patterns with the single `context/.obsidian/` line.
 
 ## AGENTS.md drift detection (required headers)
 

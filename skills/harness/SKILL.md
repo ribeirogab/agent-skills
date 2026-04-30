@@ -78,15 +78,14 @@ ln -s AGENTS.md CLAUDE.md
 
 ### .gitignore additions
 
-Append these lines to the repo's `.gitignore` (skip any already present):
+Append these lines to the repo's `.gitignore` (skip if already present):
 
 ```
-# Obsidian workspace (machine-local)
-context/.obsidian/workspace.json
-context/.obsidian/workspace-mobile.json
-context/.obsidian/cache
-context/.obsidian/plugins/*/data.json
+# Obsidian vault config (machine-local — Obsidian rewrites these on every open)
+context/.obsidian/
 ```
+
+Rationale: Obsidian rewrites `app.json`, `appearance.json`, `core-plugins.json`, and the workspace files every time the vault is opened, which creates constant `git status` noise. The harness still **creates** the three config JSONs locally during scaffolding (so `useMarkdownLinks: false` / `newLinkFormat: "relative"` are set the first time Obsidian opens — wikilinks in the MOCs depend on this), but they are not tracked. Obsidian preserves existing user settings when it rewrites these files, so the defaults persist locally on subsequent opens.
 
 ### Skills and commands (copy from scaffold/)
 
