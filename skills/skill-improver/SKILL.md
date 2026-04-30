@@ -27,17 +27,20 @@ The phrase "do no harm" is more important here than "be thorough". If you cannot
 
 ## Workflow
 
+The user invoked this skill so the work would get done. Run the whole workflow autonomously without pausing for input, then deliver one consolidated report at the end. Do not ask the user "should I apply this?" mid-run — use the regression-risk classification (step 6) to decide what to apply and what to skip.
+
 Copy this checklist into the conversation and tick items as you progress:
 
 ```
 - [ ] 1. Locate the target skill (resolve any symlinks)
 - [ ] 2. Read SKILL.md and inventory the directory tree
-- [ ] 3. State the preserved purpose (quote the description verbatim)
+- [ ] 3. State the preserved purpose (quote the description verbatim — informational, not a question)
 - [ ] 4. Audit against the canonical rules (load references/audit-checklist.md)
 - [ ] 5. Categorize findings: critical / structural / stylistic / opportunity
-- [ ] 6. Draft proposals with regression-risk annotations
-- [ ] 7. Confirm with the user, then apply only what was accepted
+- [ ] 6. Decide per-finding what to apply, using regression-risk grading
+- [ ] 7. Apply autonomously (no confirmation prompts)
 - [ ] 8. Re-audit to verify no new violations
+- [ ] 9. Deliver one final report with diff summary, applied changes, and skipped findings
 ```
 
 ### Step 1: Locate the target skill
@@ -71,13 +74,11 @@ Record:
 
 ### Step 3: State the preserved purpose
 
-Quote the existing `description` verbatim back to the user, then explicitly commit to preserving it:
+Quote the existing `description` verbatim and announce that it will be preserved:
 
-> "Preserved purpose: `<description value>`.
-> Improvements will polish wording, structure, and adherence to authoring rules — they will not change what this skill is supposed to do.
-> Confirm to proceed, or tell me to redesign the purpose first."
+> "Preserved purpose (will not be altered): `<description value>`."
 
-This step is non-negotiable. If the user wants the skill to do something different, redirect them to `skill-creator` for a redesign — that is not what this skill is for.
+This is informational — do not ask the user to confirm. The "preserve purpose" rule is enforced by the agent (any proposed change that would alter the description's meaning is automatically rejected at step 6, not surfaced as a question). If the audit later finds that the description itself violates a hard rule (e.g., reserved word, exceeds 1024 chars, contains forbidden characters), that is a separate Critical finding handled in step 7 — still no mid-run question.
 
 ### Step 4: Audit
 
@@ -100,56 +101,75 @@ If the audit returns no findings at any severity, report that and stop — do no
 
 Surface counts up front so the user can prioritize: "Found 0 critical, 2 structural, 5 stylistic, 3 opportunities."
 
-### Step 6: Draft proposals with regression-risk annotations
+### Step 6: Decide per-finding using regression-risk grading
 
-For each finding, write a concrete change. Show enough context that the user can judge:
+For each finding, draft the concrete change internally and classify its regression risk:
 
-- The exact diff (or the new text + replacement target).
-- A one-line **why** that explains the rule being applied.
-- A one-line **regression risk** annotation:
-  - `None` — purely formatting (whitespace, header level, link format).
-  - `Low` — rewording that preserves all triggers and meaning.
-  - `Medium` — narrows or expands triggering coverage; flag for confirmation.
-  - `High` — changes load-bearing instructions, removes scripts, deletes files. Always require confirmation.
+- `None` — purely formatting (whitespace, header level, link format). Safe.
+- `Low` — rewording that preserves all triggers, meaning, and load-bearing content. Safe.
+- `Medium` — narrows or expands the description's triggering coverage; or rewrites a non-load-bearing prose section that some agents might rely on stylistically. Apply if it expands coverage or strictly improves clarity; skip if it narrows coverage.
+- `High` — touches load-bearing instructions, removes or rewrites scripts, deletes files (any files), changes the description's *meaning* rather than its wording. Skip and defer to the user.
 
-Group proposals by severity so the user can accept all critical/structural in one pass and triage opportunities individually.
+Never present "Option A or Option B" choices to the user — pick the single best change yourself. If you cannot decide between two valid options, classify it as `High` (judgment call) and skip.
 
-### Step 7: Confirm and apply
+The "preserve purpose" rule is automatic, not a question: any proposed change that alters the description's meaning is reclassified to `High` and skipped, no exceptions.
 
-Get explicit user confirmation before applying. Treat silence as "not yet confirmed" — do not apply on assumption.
+### Step 7: Apply autonomously
+
+Apply all `None` / `Low` / `Medium` proposals without asking. Skip `High` proposals and remember to surface them in the final report.
 
 When applying:
 - Use the `Edit` tool for in-place edits to existing files.
 - Create files for new references; never inline content that should live in `references/`.
-- Delete forbidden files (e.g., `README.md` inside the skill folder) only after explicit confirmation.
 - Preserve file modes on scripts (`chmod +x` if the script was executable).
+- For destructive operations — *deleting* a file or directory — surface as a `High` finding even if the file is forbidden (e.g., `README.md` inside the skill folder). Destructive ops are the one exception to autonomy: report and let the user delete.
+
+Do not pause mid-application to ask. Apply the full batch, then go to step 8.
 
 ### Step 8: Re-audit
 
-Run the audit again on the modified skill. Confirm:
-- No critical or structural findings remain.
+Run the audit again on the modified skill. Verify:
+- No critical or structural findings remain (other than any explicitly skipped High findings).
 - No new findings were introduced by the changes.
 - Body line count after changes is within budget.
 
-Show the user a final diff summary and a short report:
+### Step 9: Final report
+
+Deliver one consolidated report. This is the only output the user is required to read:
 
 ```
 Skill improved: <skill-name>
-- Critical findings: <before> → <after>
-- Structural findings: <before> → <after>
-- Stylistic findings: <before> → <after>
-- Body line count: <before> → <after>
-- Files changed: <list>
-- Files added: <list>
-- Files deleted: <list>
-- Preserved description: "<verbatim>"
+
+Findings (before → after):
+- Critical:    <n> → <n>
+- Structural:  <n> → <n>
+- Stylistic:   <n> → <n>
+- Opportunity: <n> → <n>
+
+Applied (n):
+- <ID> [<risk>] <one-line summary> — <file:line>
+- ...
+
+Skipped — High risk, deferred for manual review (n):
+- <ID> [High] <one-line summary> — <file:line> — <why High>
+- ...
+
+Body line count: <before> → <after>
+Files changed: <list>
+Files added:   <list>
+
+Preserved description: "<verbatim>"
 ```
+
+If `Skipped` is non-empty, the user can review and apply manually. Do not loop back to ask.
 
 ## Anti-patterns to avoid
 
-- **Do not change the description's meaning.** Polishing wording is allowed; rewriting purpose is not. If the description is genuinely wrong, surface that as a flagged proposal and stop until the user redirects to `skill-creator`.
-- **Do not silently trim load-bearing prose.** A long body is allowed if it is genuinely doing work. Length is an *opportunity* finding, not a critical one.
-- **Do not delete non-canonical directories without confirmation.** `agents/`, `eval-viewer/`, `scaffold/`, and similar may be load-bearing for skills that legitimately go beyond Anthropic's canonical layout. Flag them as "non-canonical, referenced from SKILL.md → preserved" or "non-canonical, NOT referenced from SKILL.md → flag for the user".
-- **Do not apply changes without explicit confirmation** for `Medium` or `High` regression risk.
-- **Do not invent findings.** If the skill is clean, say so. The bar for an opportunity finding is "this would meaningfully help"; not "I could write a sentence about it".
-- **Do not propose changes that would themselves violate the rules.** A proposed improvement that adds nested references, introduces backslash paths, or breaks the description's third-person voice is itself a regression — discard and reformulate.
+- **Never pause mid-run to ask the user.** They invoked the skill so the work would get done. Use regression-risk grading to decide what to apply versus what to skip; surface skipped items in the final report, not as questions.
+- **Never present multiple-choice options.** No "Option A or Option B?" to the user. Pick the better option yourself. If undecidable, classify as `High` and skip.
+- **Do not change the description's meaning.** Wording polish is allowed; semantic rewrite is not. Any change that alters meaning is auto-reclassified to `High` and skipped.
+- **Do not silently trim load-bearing prose.** A long body is allowed if it is doing work. Length alone is an *opportunity* finding, never `Critical`.
+- **Do not delete files autonomously.** Destructive ops are the one exception to autonomy — surface as `High` even when the file is forbidden (e.g., a `README.md` inside the skill folder). Let the user delete.
+- **Do not delete non-canonical directories.** `agents/`, `eval-viewer/`, `scaffold/`, etc. may be load-bearing for skills that legitimately extend the canonical layout. Flag them in the report as `non-canonical, referenced from SKILL.md → preserved` or `non-canonical, not referenced → High, deferred`.
+- **Do not invent findings.** If the skill is clean, say so. The bar for an opportunity finding is "this would meaningfully help" — not "I could write a sentence about it".
+- **Do not propose changes that would themselves violate the rules.** A proposed improvement that adds nested references, backslash paths, or breaks the description's third-person voice is itself a regression — discard and reformulate.
