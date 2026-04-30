@@ -1,0 +1,22 @@
+[
+  {"query": "yo can you check my SKILL.md at /Users/me/repo/.claude/skills/data-extractor — i feel like the description isn't great and the body might be too long, just fix what's wrong without changing what it does", "should_trigger": true},
+  {"query": "audit the harness skill in this repo, i want to know if it's following anthropic's best practices. path is .claude/skills/harness", "should_trigger": true},
+  {"query": "ta meio bagunçado o skill que fiz pra processar pdfs aqui (skills/pdf-helper), pode dar uma melhorada? mas sem mudar o objetivo dele", "should_trigger": true},
+  {"query": "review the skill at .claude/skills/code-reviewer for any anthropic best-practice violations and fix them", "should_trigger": true},
+  {"query": "i think my skill at /tmp/my-skill is undertriggering — can you optimize the description without changing what the skill does?", "should_trigger": true},
+  {"query": "refactor the SKILL.md in skills/migrations-runner to follow progressive disclosure properly", "should_trigger": true},
+  {"query": "polish my email-parser skill at .claude/skills/email-parser, especially the description field. don't change its purpose", "should_trigger": true},
+  {"query": "is the skill at skills/chart-builder conformant with the SKILL.md format rules? fix anything broken", "should_trigger": true},
+  {"query": "improve .claude/skills/legal-analyzer — keep the same purpose, just make it cleaner", "should_trigger": true},
+  {"query": "audit my docs-writer skill (skills/docs-writer/) and apply any safe improvements automatically", "should_trigger": true},
+  {"query": "create a new skill from scratch that converts xlsx files to csv with custom delimiter handling", "should_trigger": false},
+  {"query": "i need to evaluate whether my pdf-skill produces good outputs on real test prompts — run it against 5 sample pdfs and grade the results", "should_trigger": false},
+  {"query": "package the skill at skills/data-extractor as a .skill file so i can share it with my team", "should_trigger": false},
+  {"query": "what are anthropic's best practices for writing claude code skills? give me a summary", "should_trigger": false},
+  {"query": "benchmark my skill's performance — i want pass rate, token count, and time vs baseline", "should_trigger": false},
+  {"query": "review this pull request for code quality issues, file paths are in the diff", "should_trigger": false},
+  {"query": "audit my python project for security vulnerabilities, especially around the auth module", "should_trigger": false},
+  {"query": "improve the description in this README.md so users understand the project better", "should_trigger": false},
+  {"query": "check my MCP server's tool descriptions for clarity", "should_trigger": false},
+  {"query": "create test cases for my skill — i want eval prompts that exercise edge cases for skill-improver", "should_trigger": false}
+]
