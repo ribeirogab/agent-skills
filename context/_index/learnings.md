@@ -29,4 +29,4 @@ _No references yet._
 
 ## `#gotcha` — Things that tripped us up
 
-_No gotchas captured yet. Add the first one when you hit a repeatable surprise._
+- [[../learnings/vendoring-a-single-skill-loses-upstream-license|Vendoring a single skill from a multi-skill repo loses the upstream LICENSE]] — license-at-root layouts (xixu-me/skills pattern) drop the notice when only the skill subdir is vendored; restore inside the folder + add a NOTICE.md row.
