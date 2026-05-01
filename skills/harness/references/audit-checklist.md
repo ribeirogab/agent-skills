@@ -78,7 +78,13 @@ Actively scan `context/specs/` (excluding `_template/`) — any folder whose nam
 
 > "`<old-name>/` is not date-prefixed. Date prefixes prevent the naming conflicts that numeric prefixes (`01-`, `02-`) cause when multiple specs land in parallel. Rename to `<YYYY-MM-DD>-<slug>/`?"
 
-Pull the date from the folder's `spec.md` frontmatter `created:` field when present; if absent, ask the user. **Never rename without confirmation.**
+Pull the date from the folder's `spec-<slug>.md` frontmatter `created:` field when present; if absent, ask the user. **Never rename without confirmation.**
+
+### Spec file naming follows `<spec|plan|tasks>-<slug>.md`
+
+Inside any date-prefixed spec folder, the three files must use the slug-included naming convention: `spec-<slug>.md`, `plan-<slug>.md`, `tasks-<slug>.md`, where `<slug>` is the same kebab slug used in the folder name (the part after the `YYYY-MM-DD-` prefix). Generic `spec.md` / `plan.md` / `tasks.md` files inside a real spec folder are `DRIFT` — they make every spec's tab indistinguishable in editors and search. Fix: rename each file to include the slug; update internal wikilinks (`[[spec]]` → `[[spec-<slug>]]`, etc.) at the same time.
+
+The `_template/` folder is the only exception — its files stay named `spec.md` / `plan.md` / `tasks.md` because they are blueprints, not real specs.
 
 ### .gitignore ignores the entire Obsidian config directory
 

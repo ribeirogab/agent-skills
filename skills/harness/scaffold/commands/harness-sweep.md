@@ -138,16 +138,17 @@ If the result is `SECTION_BASED`, **skip this check** and report `N/A — consti
 
 If the result is `RULE_NUMBERED`, proceed: identify rules by their `## ` or `### ` headings inside the constitution. For each, search the rest of the vault for the rule's slug or a paraphrase. Report the rules with **zero hits** as a **WARN** — ask the user to keep as-is, rephrase to be more memorable, or move to `context/_archive/constitution-history.md`.
 
-### 5. Specs done in `tasks.md` but still `status: draft`
+### 5. Specs done in `tasks-<slug>.md` but still `status: draft`
 
 A spec where every task is checked but the frontmatter still says `draft` is a missed bookkeeping step — the vault thinks the work is in flight when it shipped weeks ago.
 
-The glob `context/specs/[0-9]*-*/` aborts the entire script under zsh's default `nomatch` setting when no spec folders exist yet — collect matches with `find` instead, which handles the empty case silently.
+The glob `context/specs/[0-9]*-*/` aborts the entire script under zsh's default `nomatch` setting when no spec folders exist yet — collect matches with `find` instead, which handles the empty case silently. Inside each folder, derive the slug from the folder name and look for the slugged file names (`spec-<slug>.md`, `tasks-<slug>.md`).
 
 ```bash
 find context/specs -mindepth 1 -maxdepth 1 -type d -name '[0-9]*-*' 2>/dev/null | while read -r spec_dir; do
-  tasks="$spec_dir/tasks.md"
-  spec="$spec_dir/spec.md"
+  slug=$(basename "$spec_dir" | sed 's/^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-//')
+  tasks="$spec_dir/tasks-$slug.md"
+  spec="$spec_dir/spec-$slug.md"
   [ -f "$tasks" ] && [ -f "$spec" ] || continue
   unchecked=$(grep -cE '^\s*-\s*\[ \]' "$tasks" 2>/dev/null || echo 0)
   status=$(awk '/^---$/{n++; next} n==1 && /^status:/{print $2}' "$spec")

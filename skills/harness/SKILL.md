@@ -140,7 +140,7 @@ Rules:
 
 ### Spec folder migration (if drift was reported)
 
-If the audit flagged any spec folder without a `YYYY-MM-DD-` prefix, migrate per the rules in `references/audit-checklist.md` (pull date from `spec.md` frontmatter `created:` field, ask user when absent, never rename without confirmation).
+If the audit flagged any spec folder without a `YYYY-MM-DD-` prefix, migrate per the rules in `references/audit-checklist.md` (pull date from the spec file's frontmatter `created:` field, ask user when absent, never rename without confirmation).
 
 ## Phase 5 — Validate
 

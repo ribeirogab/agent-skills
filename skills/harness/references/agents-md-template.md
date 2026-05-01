@@ -45,7 +45,7 @@ The audit checklist (`references/audit-checklist.md`) checks for these section h
 2. **Read `context/constitution.md`** for non-negotiable principles.
 3. **If the user is asking you to implement, modify, or create something**, assess the request: "Can I describe the complete solution in one sentence?"
    - **Yes** → implement directly.
-   - **No** → invoke `harness-brainstorming` → `spec.md` → self-review the spec → `/harness-review-spec` for an external evaluator pass → `harness-writing-plans` → `plan.md` + `tasks.md` → implement.
+   - **No** → invoke `harness-brainstorming` → `spec-<slug>.md` → self-review the spec → `/harness-review-spec` for an external evaluator pass → `harness-writing-plans` → `plan-<slug>.md` + `tasks-<slug>.md` → implement.
    - **Almost** (1-2 open decisions) → ask the user whether to spec or go direct.
 
    If the user is asking a question, investigating, or exploring — just answer.
@@ -64,7 +64,7 @@ If you discovered something non-obvious during implementation — a gotcha, a co
 
 ## After completing a spec
 
-When a spec is shipped (all tasks in `tasks.md` done, spec marked `shipped`), always run an explicit reflection step before closing out — do not skip this:
+When a spec is shipped (all tasks in `tasks-<slug>.md` done, spec marked `shipped`), always run an explicit reflection step before closing out — do not skip this:
 
 1. Ask yourself: "What did I learn implementing this that wasn't obvious from the spec?" Consider gotchas hit, constraints discovered, surprising framework/library behavior, decisions that reversed mid-implementation, and anything a future implementer would waste time rediscovering.
 2. If there is at least one useful learning, create an atomic note in `context/learnings/` per learning (one concept per note) using `context/templates/learning.md`, and link it back to the spec folder with a wikilink. Add each new note to `context/_index/learnings.md` under the appropriate category.
@@ -97,7 +97,7 @@ Skills are committed to `.agents/skills/` (canonical, agent-agnostic) and expose
 - **`harness-recall`** — quick project reconnaissance of the `context/` vault.
 - **`/harness-spec`** — take the current conversation and enter the spec flow, skipping already-discussed questions.
 - **`/harness-review-spec`** — external evaluator that reads `context/constitution.md` + a spec and flags violations, vagueness, missing acceptance criteria, and duplication of existing learnings/rules. Run this **after** your own spec self-review and **before** moving to `harness-writing-plans`.
-- **`/harness-sweep`** — manual garbage-collection pass over the vault: orphan learnings, MOC entries pointing nowhere, constitution rules never cited, specs whose `tasks.md` is fully checked but `status:` is still `draft`. Run on demand, never automatic.
+- **`/harness-sweep`** — manual garbage-collection pass over the vault: orphan learnings, MOC entries pointing nowhere, constitution rules never cited, specs whose `tasks-<slug>.md` is fully checked but `status:` is still `draft`. Run on demand, never automatic.
 - **`/harness-learn`** — investigate a topic in the project and save findings as a learning note in `context/learnings/`.
 - **`/harness-open-pr`** — **required** command to open pull requests with auto-generated title and description. Always use this command when creating a PR.
 ```

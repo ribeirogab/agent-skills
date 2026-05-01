@@ -228,12 +228,12 @@ Tick each `[x]` when verified. A spec is **not shippable** with empty or `{{plac
 ```markdown
 ---
 feature: {{kebab-slug-of-feature}}
-spec: "[[spec]]"
+spec: "[[spec-{{kebab-slug-of-feature}}]]"
 created: {{YYYY-MM-DD}}
 ---
 # {{Feature Name}} — Plan
 
-**For this spec:** `[[spec]]`
+**For this spec:** `[[spec-{{kebab-slug-of-feature}}]]`
 
 ## Approach
 
@@ -260,13 +260,13 @@ created: {{YYYY-MM-DD}}
 ```markdown
 ---
 feature: {{kebab-slug-of-feature}}
-plan: "[[plan]]"
-spec: "[[spec]]"
+plan: "[[plan-{{kebab-slug-of-feature}}]]"
+spec: "[[spec-{{kebab-slug-of-feature}}]]"
 created: {{YYYY-MM-DD}}
 ---
 # {{Feature Name}} — Tasks
 
-**For this plan:** `[[plan]]`
+**For this plan:** `[[plan-{{kebab-slug-of-feature}}]]`
 
 ## Phase 1: {{name}}
 
@@ -280,6 +280,8 @@ created: {{YYYY-MM-DD}}
 ```
 
 **Spec folder naming convention:** `YYYY-MM-DD-<kebab-slug>/` where `YYYY-MM-DD` is the date the spec was created. Examples: `2026-04-15-user-auth`, `2026-04-16-mobile-responsiveness`, `2026-04-17-api-refactoring`. Use today's date when creating a new spec; if multiple specs are created on the same day, the `<kebab-slug>` disambiguates them. The `_template/` folder is excluded from listings.
+
+**Spec file naming convention:** when copying the template into a new spec folder, rename each file from the generic template name to one that includes the slug — `spec.md` → `spec-<kebab-slug>.md`, `plan.md` → `plan-<kebab-slug>.md`, `tasks.md` → `tasks-<kebab-slug>.md`. The slug is the same `<kebab-slug>` used in the folder name. The reason: agent sessions, editor tabs, and search results often show only the basename, and a vault with many specs would otherwise be a wall of indistinguishable `spec.md` entries. Substitute every occurrence of `{{kebab-slug-of-feature}}` (in frontmatter wikilinks and body cross-refs) with the same slug at the same time. Templates inside `_template/` keep their canonical short names — they are blueprints, not real specs.
 
 ---
 

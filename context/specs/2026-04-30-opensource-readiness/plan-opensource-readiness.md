@@ -1,11 +1,11 @@
 ---
 feature: opensource-readiness
-spec: "[[spec]]"
+spec: "[[spec-opensource-readiness]]"
 created: 2026-04-30
 ---
 # Opensource Readiness — Plan
 
-**For this spec:** `[[spec]]`
+**For this spec:** `[[spec-opensource-readiness]]`
 
 ## Approach
 

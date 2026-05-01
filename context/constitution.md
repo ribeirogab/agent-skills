@@ -39,7 +39,7 @@ The flagship skill in this repo is `harness/`, which idempotently installs an ag
 
 ## Spec-Driven workflow
 
-Before implementing any user request, assess whether the solution is obvious. If you cannot describe the complete solution in one sentence, use the Spec Kit flow: brainstorm → `spec.md` → plan.md → `tasks.md` → implement. If the solution is obvious, go direct. If almost obvious but with 1-2 open decisions, ask the user whether to spec or go direct.
+Before implementing any user request, assess whether the solution is obvious. If you cannot describe the complete solution in one sentence, use the Spec Kit flow: brainstorm → `spec-<slug>.md` → `plan-<slug>.md` → `tasks-<slug>.md` → implement. If the solution is obvious, go direct. If almost obvious but with 1-2 open decisions, ask the user whether to spec or go direct.
 
 Specs never get deleted. Shipped specs remain in `context/specs/` as historical record.
 

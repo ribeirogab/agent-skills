@@ -17,7 +17,7 @@ Run an **independent** review of a spec written by the agent. This is the second
 
 ## What to evaluate
 
-For the target `spec.md`, return a finding for each of the categories below. Each finding is one of `PASS`, `WARN`, or `FAIL`. Reserve `FAIL` for issues that should block handoff.
+For the target `spec-<slug>.md`, return a finding for each of the categories below. Each finding is one of `PASS`, `WARN`, or `FAIL`. Reserve `FAIL` for issues that should block handoff.
 
 ### 1. Constitution compliance
 

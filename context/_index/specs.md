@@ -18,4 +18,4 @@ _No active specs. When a request requires the spec flow, link the new spec here.
 
 ## Shipped
 
-- [[../specs/2026-04-30-opensource-readiness/spec|opensource-readiness]] — added LICENSE, README, CONTRIBUTING, CODE_OF_CONDUCT, SECURITY, NOTICE.md, .github templates, and restored vendored opensource-guide-coach LICENSE so the repo can be safely published as MIT-licensed open source. Shipped 2026-04-30.
+- [[../specs/2026-04-30-opensource-readiness/spec-opensource-readiness|opensource-readiness]] — added LICENSE, README, CONTRIBUTING, CODE_OF_CONDUCT, SECURITY, NOTICE.md, .github templates, and restored vendored opensource-guide-coach LICENSE so the repo can be safely published as MIT-licensed open source. Shipped 2026-04-30.
