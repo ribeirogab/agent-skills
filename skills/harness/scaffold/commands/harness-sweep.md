@@ -86,9 +86,22 @@ Ask the user per entry whether to update or remove.
 
 A rule in `context/constitution.md` that no spec, learning, convention, or rule file references is either too universal to need citing — or it is dead weight nobody remembers.
 
-Identify rules by their headings (`## ` or `### `) inside the constitution. For each, search the rest of the vault for the rule's slug or a paraphrase. Report the rules with **zero hits**.
+**This check only applies to rule-numbered constitutions** — those organized as a list of discrete named rules (e.g., `## Rule of Currency`, `## Rule of Caution`, or sections under a top-level `## Rules` header). Many constitutions use a different shape: principle-by-section (`## Architecture principles`, `## Scope guardrails`, `## Tooling and workflow principles`). The "uncited rules" framing does not apply there — those headings are categories of guidance, not individual rules to be cited.
 
-This is a **WARN**, not a delete prompt. Ask the user to: keep as-is, rephrase to be more memorable, or move to `context/_archive/constitution-history.md`.
+Detect the shape first. Run:
+
+```bash
+# Heuristic: rule-numbered if any heading begins with "Rule of",
+# OR there is an explicit "## Rules" section,
+# OR the file has a `severity:` frontmatter / table column.
+grep -qE '^##+ +Rule of |^## Rules\b' context/constitution.md \
+  || grep -q '^severity:' context/constitution.md \
+  && echo RULE_NUMBERED || echo SECTION_BASED
+```
+
+If the result is `SECTION_BASED`, **skip this check** and report `N/A — constitution is section-based (no discrete named rules to cite)`. Do not produce per-section findings; principle headings are not "uncited rules", they are category headers.
+
+If the result is `RULE_NUMBERED`, proceed: identify rules by their `## ` or `### ` headings inside the constitution. For each, search the rest of the vault for the rule's slug or a paraphrase. Report the rules with **zero hits** as a **WARN** — ask the user to keep as-is, rephrase to be more memorable, or move to `context/_archive/constitution-history.md`.
 
 ### 5. Specs done in `tasks.md` but still `status: draft`
 
@@ -113,9 +126,9 @@ For each, ask the user: mark `shipped` (and prompt for a `shipped: YYYY-MM-DD` d
 
 ### 6. Empty MOC sections
 
-A section heading in a MOC with zero entries is an unsigned promise. Either the category is unused (remove) or notes were misfiled (move).
+A section heading in a MOC that has **nothing under it at all** — no content lines, no italics placeholder — is an unsigned promise. Either the category was added with intent to fill but forgotten, or notes were misfiled.
 
-A section is "empty" when it has no content other than the heading itself. Content is any non-blank line that is not a heading and is not a single italics-only placeholder line such as `_(none yet)_` (the canonical scaffold writes those into newly-created MOC categories — they signal the category is reserved but unused).
+A section with `_(none yet)_` or `_No ... yet._` italics placeholders is **not** flagged: the canonical scaffold writes those whenever a category is reserved but empty, so the placeholder represents an explicit acknowledgement that the category exists and is waiting for its first entry. Flagging those would produce constant noise on every young vault and train the user to ignore the sweep.
 
 ```bash
 for moc in context/_index/*.md; do
@@ -125,14 +138,13 @@ for moc in context/_index/*.md; do
       h=$0; c=0; next
     }
     /^[[:space:]]*$/{ next }
-    /^_[^_].*_[[:space:]]*$/{ next }
     { c++ }
     END{ if (h && c == 0) print FILENAME ": " h }
   ' "$moc"
 done
 ```
 
-The check now treats prose paragraphs as legitimate content (so a MOC section that is one paragraph of intro text is no longer flagged), while still surfacing sections that contain only `_(none yet)_` placeholders.
+The awk now treats *any* non-blank, non-heading line as content — including italics placeholders, prose paragraphs, bullets, wikilinks, and tables. Only sections that are literally heading-then-nothing get flagged.
 
 WARN-level — ask the user before any change.
 
