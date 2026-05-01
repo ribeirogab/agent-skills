@@ -26,7 +26,7 @@ In scope:
 
 Out of scope:
 
-- The `.claude/`, `context/`, and `evals/` directories — maintainer-local content (dogfooded harness output, personal knowledge vault, eval workspaces). Not consumed by `npx skills add` and not part of the published skill surface.
+- The `.agents/`, `.claude/`, `context/`, and `evals/` directories — maintainer-local content (dogfooded harness output, personal knowledge vault, eval workspaces). Not consumed by `npx skills add` and not part of the published skill surface.
 - Vulnerabilities in any agent runtime (Claude Code, Codex, Cursor, etc.), the underlying model APIs, or any third-party service. Report those to the corresponding vendor.
 
 ## Threat model

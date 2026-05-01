@@ -14,7 +14,7 @@ What this PR does, in 1–3 bullets. Link any related issue.
 - [ ] Branch name is descriptive and not `main`.
 - [ ] `README.md`'s `## Skills` section was updated if a skill was added or removed.
 - [ ] `NOTICE.md` was updated if vendored content was refreshed or modified.
-- [ ] No edits under `context/`, `.claude/`, or `evals/` (maintainer-local dirs, out of scope).
+- [ ] No edits under `context/`, `.agents/`, `.claude/`, or `evals/` (maintainer-local dirs, out of scope).
 - [ ] Commit messages follow Conventional Commits style.
 - [ ] No AI-attribution footers in commits or this description (e.g. `Co-Authored-By: Claude`, `Generated with Cursor`, `Co-authored-by: Codex`, etc.).
 

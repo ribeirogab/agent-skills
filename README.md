@@ -40,7 +40,7 @@ npx skills add ribeirogab/agent-skills --skill skill-improver
 
 **Use:** point it at any skill folder.
 
-> "Audit the skill at `.claude/skills/my-skill` and apply safe fixes."
+> "Audit the skill at `skills/my-skill` and apply safe fixes."
 
 The skill walks a 10-section canonical checklist, applies anything `Low` or `Medium` regression-risk autonomously, and produces a final report with a `Skipped` section for `High`-risk findings the maintainer should review by hand.
 
@@ -65,7 +65,7 @@ agent-skills/
 └── README.md
 ```
 
-The repository also contains `.claude/`, `context/`, and `evals/` — local-only dirs used by the maintainer to dogfood the harness, run skill evaluations, and store personal project notes. They are not part of the published surface and are not what `npx skills add` installs.
+The repository also contains `.agents/`, `.claude/`, `context/`, and `evals/` — local-only dirs used by the maintainer to dogfood the harness, run skill evaluations, and store personal project notes. They are not part of the published surface and are not what `npx skills add` installs.
 
 ## License
 
