@@ -21,20 +21,25 @@ The canonical source for these rules is Anthropic's *Skill authoring best practi
 
 ## Section 1 — Frontmatter validation (Critical)
 
-A failure here means the skill silently fails to load. These are not preferences; they are runtime validation rules.
+A failure here means the skill silently fails to load. These are not preferences; they are runtime validation rules. **Do not check by hand — invoke skill-creator's `quick_validate.py`** (see Step 4a in `SKILL.md`). The script is the canonical enforcer of every rule below; the rules are listed here only for reference and as a fallback when the script is unavailable.
+
+```bash
+# From inside .claude/skills/skill-creator/
+python -m scripts.quick_validate <absolute-path-to-target-skill>
+```
+
+A non-`"Skill is valid!"` exit is a **Critical** finding — quote the script's error message verbatim in the finding's evidence.
+
+Reference list of what the script enforces (apply manually only if the script is unavailable):
 
 - [ ] File begins with `---` on line 1
 - [ ] File contains a closing `---` before the body
-- [ ] `name` field present
-- [ ] `name` is 1–64 characters
-- [ ] `name` contains only lowercase letters, numbers, and hyphens (no spaces, underscores, capitals)
-- [ ] `name` does not contain `<` or `>` (XML angle brackets forbidden)
-- [ ] `name` does not contain the reserved words `claude` or `anthropic`
-- [ ] `description` field present
-- [ ] `description` is non-empty
-- [ ] `description` is ≤ 1024 characters
-- [ ] `description` does not contain `<` or `>`
-- [ ] Optional fields, if present, are well-formed YAML (`license`, `compatibility`, `allowed-tools`, `metadata`)
+- [ ] `name` field present, 1–64 chars, kebab-case (lowercase letters, numbers, hyphens), no `<>`, no reserved words `claude`/`anthropic`, no leading/trailing/double hyphens
+- [ ] `description` field present, non-empty, ≤ 1024 chars, no `<>`
+- [ ] Only allowed top-level keys: `name`, `description`, `license`, `compatibility`, `allowed-tools`, `metadata`
+- [ ] `compatibility` (if present) is a string ≤ 500 chars
+
+The most common failures the prose checklist would let slip are: `<` or `>` inside the description (easy to miss visually), description over 1024 chars (impossible to count by eye), and unknown top-level keys typed by accident. The script catches all three deterministically.
 
 ## Section 2 — Folder and file naming (Critical for `SKILL.md`, Structural for the rest)
 

@@ -82,7 +82,17 @@ This is informational — do not ask the user to confirm. The "preserve purpose"
 
 ### Step 4: Audit
 
-Read [references/audit-checklist.md](references/audit-checklist.md) and apply each section to the target. Each finding must record:
+The audit has two passes — a **mechanical pass** that runs Anthropic's official validator scripts (when available), and a **prose pass** that applies the canonical checklist by hand. Both must run; the mechanical pass catches violations the prose pass might miss under context pressure (this skill's own first revision shipped with `<>` in its description because the prose check was skipped — running the validator would have caught it instantly).
+
+**4a — Mechanical pass.** If the skill-creator scripts are installed at `.claude/skills/skill-creator/scripts/` (any repo that vendors skill-creator), run from inside that directory:
+
+```bash
+python -m scripts.quick_validate <absolute-path-to-target-skill>
+```
+
+The script enforces all of Section 1 (frontmatter) and the kebab-case parts of Section 2 (folder/file naming). Any non-zero exit or any error message is a **Critical** finding. Quote the script's output verbatim in the finding's evidence. If the scripts are not available, log "mechanical pass skipped — skill-creator scripts not found" and proceed with the prose pass alone, but note the gap in the final report.
+
+**4b — Prose pass.** Read [references/audit-checklist.md](references/audit-checklist.md) and apply each section to the target. Each finding must record:
 
 - **Section + item** from the checklist.
 - **Severity** (Critical / Structural / Stylistic / Opportunity).
@@ -90,7 +100,9 @@ Read [references/audit-checklist.md](references/audit-checklist.md) and apply ea
 - **Quote** of the offending content.
 - **Rule** the finding violates (one-line summary; canonical source is the checklist).
 
-If the audit returns no findings at any severity, report that and stop — do not invent improvements.
+The prose pass covers Sections 2 (beyond kebab-case checks) through 10 — layout, body style, description quality, progressive disclosure, degrees of freedom, workflow patterns, scripts, anti-regression. The mechanical pass already covered Section 1.
+
+If both passes return zero findings at any severity, report that and stop — do not invent improvements.
 
 ### Step 5: Categorize findings
 
@@ -128,10 +140,19 @@ Do not pause mid-application to ask. Apply the full batch, then go to step 8.
 
 ### Step 8: Re-audit
 
-Run the audit again on the modified skill. Verify:
-- No critical or structural findings remain (other than any explicitly skipped High findings).
+Run both audit passes again on the modified skill. Verify:
+- The mechanical pass (`quick_validate.py`) prints "Skill is valid!" — every Critical-tier frontmatter finding from Step 4a is resolved.
+- The prose pass (Sections 2–10 of the checklist) shows no critical or structural findings remain (other than any explicitly skipped High findings).
 - No new findings were introduced by the changes.
 - Body line count after changes is within budget.
+
+Then run a packaging verification with skill-creator's `package_skill.py`, which is the most thorough static check available — it re-validates frontmatter and confirms the skill packages cleanly into a distributable `.skill` artifact:
+
+```bash
+python -m scripts.package_skill <absolute-path-to-target-skill>
+```
+
+A failure here is a **Critical** finding that must be reported even if Steps 4 and 8a passed — the canonical packager applies stricter checks than the manual audit. Skip this step only if skill-creator's scripts are unavailable; in that case note "package verification skipped" in the final report.
 
 ### Step 9: Final report
 
