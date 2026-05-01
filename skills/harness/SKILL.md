@@ -142,11 +142,51 @@ Rules:
 
 If the audit flagged any spec folder without a `YYYY-MM-DD-` prefix, migrate per the rules in `references/audit-checklist.md` (pull date from the spec file's frontmatter `created:` field, ask user when absent, never rename without confirmation).
 
+### Spec file rename migration (if drift was reported)
+
+If the audit detected a spec folder containing generic `spec.md` / `plan.md` / `tasks.md` files (instead of the `<type>-<slug>.md` convention), migrate the folder. Renaming tracked files is a destructive operation — surface each detected folder, get explicit user confirmation per folder, then run the recipe below.
+
+For each confirmed `<spec_dir>` (e.g. `context/specs/2026-04-30-opensource-readiness/`):
+
+```bash
+spec_dir="<the folder, e.g. context/specs/2026-04-30-opensource-readiness>"
+slug=$(basename "$spec_dir" | sed 's/^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-//')
+
+# 1. Rename each generic file to include the slug, preserving git history
+for type in spec plan tasks; do
+  src="$spec_dir/${type}.md"
+  dst="$spec_dir/${type}-${slug}.md"
+  [ -f "$src" ] && [ ! -e "$dst" ] && git mv "$src" "$dst"
+done
+
+# 2. Update internal wikilinks inside every file in the folder
+#    [[spec]] / [[plan]] / [[tasks]] → [[<type>-<slug>]]
+for f in "$spec_dir"/*.md; do
+  sed -i.bak \
+    -e "s/\\[\\[spec\\]\\]/[[spec-${slug}]]/g" \
+    -e "s/\\[\\[plan\\]\\]/[[plan-${slug}]]/g" \
+    -e "s/\\[\\[tasks\\]\\]/[[tasks-${slug}]]/g" \
+    "$f" && rm "$f.bak"
+done
+
+# 3. Update the specs MOC entry that pointed at the old basename
+folder=$(basename "$spec_dir")
+sed -i.bak \
+  -e "s|/${folder}/spec\\([|\\]]\\)|/${folder}/spec-${slug}\\1|g" \
+  -e "s|/${folder}/plan\\([|\\]]\\)|/${folder}/plan-${slug}\\1|g" \
+  -e "s|/${folder}/tasks\\([|\\]]\\)|/${folder}/tasks-${slug}\\1|g" \
+  context/_index/specs.md && rm context/_index/specs.md.bak
+```
+
+After the recipe runs, also `grep -rln "\[\[spec\]\]\|\[\[plan\]\]\|\[\[tasks\]\]" context/learnings/ context/conventions/ context/rules/` to surface any external wikilinks that might have pointed at the old basenames; update those manually with the user's confirmation (those references are not always intra-spec — they could legitimately mean "the spec template").
+
+Note for the `sed` `-e` line: `[|\\]]` is a character class matching `|` or `]` — this scopes the replacement to wikilink edges so we do not match `<folder>/spec-tweaks.md` or other longer paths that happen to start with `spec`.
+
 ## Phase 5 — Validate
 
 After **any** creation or fix run, and at the end of an audit-only run with all `OK`, execute the validation checklist.
 
-Read `references/validation.md` and run all 14 checks. Report results as the table specified there. If any check fails, surface the specific reason and ask "Want me to fix the failed checks?" Loop until clean or the user stops.
+Read `references/validation.md` and run all 15 checks. Report results as the table specified there. If any check fails, surface the specific reason and ask "Want me to fix the failed checks?" Loop until clean or the user stops.
 
 Validation is non-negotiable — this is what catches `{{placeholders}}` that survived scaffolding, missing AGENTS.md sections, broken symlinks, malformed JSON, and spec folders that slipped past the rename step.
 
@@ -157,7 +197,7 @@ Validation is non-negotiable — this is what catches `{{placeholders}}` that su
 
 - X/Y items OK
 - N created, M fixed, K skipped (already correct)
-- Validation: 14/14 PASS  (or list the FAILs)
+- Validation: 15/15 PASS  (or list the FAILs)
 
 {{only if first-time setup:}}
 Next steps:

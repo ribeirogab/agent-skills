@@ -82,9 +82,24 @@ Pull the date from the folder's `spec-<slug>.md` frontmatter `created:` field wh
 
 ### Spec file naming follows `<spec|plan|tasks>-<slug>.md`
 
-Inside any date-prefixed spec folder, the three files must use the slug-included naming convention: `spec-<slug>.md`, `plan-<slug>.md`, `tasks-<slug>.md`, where `<slug>` is the same kebab slug used in the folder name (the part after the `YYYY-MM-DD-` prefix). Generic `spec.md` / `plan.md` / `tasks.md` files inside a real spec folder are `DRIFT` — they make every spec's tab indistinguishable in editors and search. Fix: rename each file to include the slug; update internal wikilinks (`[[spec]]` → `[[spec-<slug>]]`, etc.) at the same time.
+Inside any date-prefixed spec folder, the three files must use the slug-included naming convention: `spec-<slug>.md`, `plan-<slug>.md`, `tasks-<slug>.md`, where `<slug>` is the same kebab slug used in the folder name (the part after the `YYYY-MM-DD-` prefix). Generic `spec.md` / `plan.md` / `tasks.md` files inside a real spec folder are `DRIFT` — they make every spec's tab indistinguishable in editors and search.
 
 The `_template/` folder is the only exception — its files stay named `spec.md` / `plan.md` / `tasks.md` because they are blueprints, not real specs.
+
+**Detection** (run during the audit pass, alongside the date-prefix check):
+
+```bash
+find context/specs -mindepth 1 -maxdepth 1 -type d -name '[0-9]*-*' 2>/dev/null | while read -r spec_dir; do
+  slug=$(basename "$spec_dir" | sed 's/^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-//')
+  for generic in spec.md plan.md tasks.md; do
+    if [ -f "$spec_dir/$generic" ]; then
+      echo "DRIFT: $spec_dir/$generic → should be ${generic%.md}-$slug.md"
+    fi
+  done
+done
+```
+
+Report each drift with the source path and the target name. Fix logic lives in `SKILL.md` (Phase 4 → "Spec file rename migration") and is rename-then-rewrite-wikilinks. Renaming a tracked file is a destructive operation per the SKILL.md "Mode of Operation" — confirm with the user once per spec folder before applying.
 
 ### .gitignore ignores the entire Obsidian config directory
 
