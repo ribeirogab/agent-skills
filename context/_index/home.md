@@ -20,4 +20,4 @@ This vault contains all project-specific knowledge for agent-skills: constitutio
 - New learning discovered → copy `../templates/learning.md` and add to `../learnings/`.
 - New convention agreed → copy `../templates/convention.md` and add to `../conventions/`.
 - New rule needed → copy `../templates/rule.md` and add to `../rules/`.
-- Always cross-link with `[[wikilinks]]` so backlinks aggregate concepts over time.
+- Always cross-link notes using Obsidian's `[[ ]]` syntax so backlinks aggregate concepts over time.
