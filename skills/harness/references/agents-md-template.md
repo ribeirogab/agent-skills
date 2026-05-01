@@ -6,7 +6,18 @@
 
 Use the project info gathered in Prerequisites to fill `{{Project Name}}` and the project description. The `## Commands (most used)` section should be populated from detected `package.json` scripts (or equivalents) — list the 5-6 most important.
 
-Do **not** leave `{{placeholders}}` in the final file. Phase 6 validation will catch them.
+Do **not** leave `{{placeholders}}` in the final file. Phase 5 validation will catch them.
+
+## Size constraint
+
+The final `AGENTS.md` must be **≤ 80 lines** (target 70–80). The file is loaded into every agent session as the entry-point contract; longer than that and it crowds out conversation context, restates content that belongs in `context/`, and starts rotting (see `context/learnings/agents-md-as-map-not-encyclopedia.md`). Phase 5 validation enforces the cap.
+
+When trimming to fit:
+
+- Tighten the project-description paragraph rather than dropping required section headers.
+- Trim the `## Commands (most used)` list to 5–6 entries — it is a list of the most-used commands, not a catalog.
+- Replace any longer narrative inside a section with a one-line pointer into `context/` (e.g., "See `context/learnings/X.md` for the full story").
+- Never drop a required section header — the validator checks for all of them.
 
 ## Required section headers
 

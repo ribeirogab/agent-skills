@@ -8,7 +8,7 @@ created: 2026-04-30
 ---
 # AGENTS.md is a map, not an encyclopedia
 
-The `AGENTS.md` file at the root of any repo touched by a skill in this collection (whether dogfooded here or scaffolded elsewhere by `harness/`) must stay short — roughly **100 lines, max** — and act as a *table of contents* into a structured knowledge directory. It is not the place to dump every rule, every convention, every gotcha.
+The `AGENTS.md` file at the root of any repo touched by a skill in this collection (whether dogfooded here or scaffolded elsewhere by `harness/`) must stay short — **80 lines hard cap, target 70–80** — and act as a *table of contents* into a structured knowledge directory. It is not the place to dump every rule, every convention, every gotcha. The harness enforces the cap mechanically via Phase 5 validation check #14.
 
 ## Context
 
@@ -25,12 +25,12 @@ The four failure modes OpenAI named:
 
 **The fix** OpenAI converged on (and that this repo's `harness/` skill scaffolds by default):
 
-- A short `AGENTS.md` (~100 lines) — the entry point. It states the project, the workflow trigger, the work ethic, and the locations of deeper knowledge.
+- A short `AGENTS.md` (≤ 80 lines, target 70–80) — the entry point. It states the project, the workflow trigger, the work ethic, and the locations of deeper knowledge.
 - A structured directory (`context/` here, `docs/` in OpenAI's case) holding the system of record: constitution, design docs, exec plans, generated artifacts, references.
 - Cross-links between them, validated mechanically (linters, CI checks).
 - Progressive disclosure: agents start with the small map and are taught where to look next.
 
-Looking at this repo's `AGENTS.md` (~85 lines) and `context/_index/home.md` MOC: this pattern is already followed. Future edits should preserve it — never let `AGENTS.md` swell.
+Looking at this repo's `AGENTS.md` (currently 72 lines) and `context/_index/home.md` MOC: this pattern is already followed and the size cap (#14) protects against future bloat. Future edits should respect the cap — never let `AGENTS.md` swell.
 
 ## Note on scope
 

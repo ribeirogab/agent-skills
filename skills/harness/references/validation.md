@@ -7,7 +7,7 @@ Report results as a table. Any `FAIL` triggers an automatic fix attempt using th
 ## Contents
 
 - [Output format](#output-format)
-- [Checks](#checks) — 13 numbered checks (CLAUDE.md symlink, placeholder sweeps, AGENTS.md headers, frontmatter, Obsidian JSON, .gitignore, spec folder naming, copied skills/commands, executable scripts, MOC placeholders, spec template Acceptance Criteria)
+- [Checks](#checks) — 14 numbered checks (CLAUDE.md symlink, placeholder sweeps, AGENTS.md headers, frontmatter, Obsidian JSON, .gitignore, spec folder naming, copied skills/commands, executable scripts, MOC placeholders, spec template Acceptance Criteria, AGENTS.md size cap)
 - [When everything passes](#when-everything-passes)
 - [When something fails](#when-something-fails)
 
@@ -168,12 +168,23 @@ grep -q '^## Acceptance Criteria$' context/specs/_template/spec.md \
 
 Fix: re-create `_template/spec.md` from the spec block in `references/vault-files.md` — the canonical template includes the section with its rules and examples.
 
+### 14. `AGENTS.md` is at most 80 lines
+
+The file is loaded into every agent session as the entry-point contract. Letting it grow past 80 lines crowds context and reintroduces the "encyclopedia" anti-pattern that the canonical authoring rules explicitly reject (see `context/learnings/agents-md-as-map-not-encyclopedia.md`). Target range is 70–80 lines.
+
+```bash
+lines=$(wc -l < AGENTS.md | tr -d ' ')
+[ "$lines" -le 80 ] && echo "PASS ($lines lines)" || echo "FAIL ($lines lines, cap 80)"
+```
+
+FAIL means `AGENTS.md` exceeded the cap. Fix: trim the body per the guidance in `references/agents-md-template.md` (`## Size constraint`) — tighten the project-description paragraph, cap `## Commands (most used)` at 5–6 entries, replace any longer narrative with a one-line pointer into `context/`. Never drop a required section header (check #4 enforces those).
+
 ## When everything passes
 
 Report:
 
 ```
-## Phase 5 — Validation: 13/13 PASS
+## Phase 5 — Validation: 14/14 PASS
 
 Harness is structurally sound.
 ```

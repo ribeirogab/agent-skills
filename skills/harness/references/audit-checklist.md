@@ -83,7 +83,7 @@ Rationale: Obsidian rewrites every file under `context/.obsidian/` on each vault
 
 If `.gitignore` is missing, or contains the older fine-grained pattern set (`workspace.json`, `cache`, `plugins/*/data.json`) instead of the directory-level ignore, status is `DRIFT`. Fix: replace the old patterns with the single `context/.obsidian/` line.
 
-## AGENTS.md drift detection (required headers)
+## AGENTS.md drift detection (required headers + size cap)
 
 `AGENTS.md` must contain all of these section headers — missing any one is `DRIFT`:
 
@@ -97,6 +97,8 @@ If `.gitignore` is missing, or contains the older fine-grained pattern set (`wor
 - `## Claude Code skills and commands`
 
 When reporting drift, name the missing section(s) explicitly so the fix step knows what to insert.
+
+`AGENTS.md` must also be **≤ 80 lines** (target range 70–80). The file is loaded into every agent session as the entry-point contract; growing past this cap crowds context and reintroduces the "encyclopedia" anti-pattern that the canonical authoring rules reject. If `AGENTS.md` exceeds 80 lines, status is `DRIFT` and the fix is to trim the body per the guidance in `references/agents-md-template.md` (`## Size constraint`) — never by dropping a required section header.
 
 ## Constitution drift detection (required sections)
 
