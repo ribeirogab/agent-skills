@@ -84,13 +84,15 @@ This is informational — do not ask the user to confirm. The "preserve purpose"
 
 The audit has two passes — a **mechanical pass** that runs Anthropic's official validator scripts (when available), and a **prose pass** that applies the canonical checklist by hand. Both must run; the mechanical pass catches violations the prose pass might miss under context pressure (this skill's own first revision shipped with `<>` in its description because the prose check was skipped — running the validator would have caught it instantly).
 
-**4a — Mechanical pass.** If the skill-creator scripts are installed at `.claude/skills/skill-creator/scripts/` (any repo that vendors skill-creator), run from inside that directory:
+**4a — Mechanical pass.** This skill bundles its own validator at `scripts/quick_validate.py` (vendored from anthropics/skills under Apache-2.0; self-contained — no dependency on skill-creator or any sibling skill being installed). Run it directly:
 
 ```bash
-python -m scripts.quick_validate <absolute-path-to-target-skill>
+python <path-to-this-skill>/scripts/quick_validate.py <absolute-path-to-target-skill>
 ```
 
-The script enforces all of Section 1 (frontmatter) and the kebab-case parts of Section 2 (folder/file naming). Any non-zero exit or any error message is a **Critical** finding. Quote the script's output verbatim in the finding's evidence. If the scripts are not available, log "mechanical pass skipped — skill-creator scripts not found" and proceed with the prose pass alone, but note the gap in the final report.
+`<path-to-this-skill>` is the directory the agent loaded this SKILL.md from — typically `.claude/skills/skill-improver/` or `skills/skill-improver/` depending on how the skill is installed. The script's only external dependency is `pyyaml`; if it is not installed, run `python3 -m pip install --user pyyaml` once.
+
+The script enforces all of Section 1 (frontmatter) and the kebab-case parts of Section 2 (folder/file naming). Any non-zero exit or any error message is a **Critical** finding. Quote the script's output verbatim in the finding's evidence.
 
 **4b — Prose pass.** Read [references/audit-checklist.md](references/audit-checklist.md) and apply each section to the target. Each finding must record:
 
@@ -146,13 +148,15 @@ Run both audit passes again on the modified skill. Verify:
 - No new findings were introduced by the changes.
 - Body line count after changes is within budget.
 
-Then run a packaging verification with skill-creator's `package_skill.py`, which is the most thorough static check available — it re-validates frontmatter and confirms the skill packages cleanly into a distributable `.skill` artifact:
+Then run the bundled packaging verification at `scripts/package_skill.py` (also vendored from anthropics/skills under Apache-2.0). This is the most thorough static check available — it re-validates frontmatter and confirms the skill packages cleanly into a distributable `.skill` artifact:
 
 ```bash
-python -m scripts.package_skill <absolute-path-to-target-skill>
+python <path-to-this-skill>/scripts/package_skill.py <absolute-path-to-target-skill> /tmp
 ```
 
-A failure here is a **Critical** finding that must be reported even if Steps 4 and 8a passed — the canonical packager applies stricter checks than the manual audit. Skip this step only if skill-creator's scripts are unavailable; in that case note "package verification skipped" in the final report.
+(The second argument is the output directory for the `.skill` artifact; `/tmp` keeps the build out of the working tree.)
+
+A failure here is a **Critical** finding that must be reported even if Steps 4 and 8a passed — the packager applies stricter checks than the manual audit.
 
 ### Step 9: Final report
 

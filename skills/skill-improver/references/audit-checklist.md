@@ -21,16 +21,15 @@ The canonical source for these rules is Anthropic's *Skill authoring best practi
 
 ## Section 1 — Frontmatter validation (Critical)
 
-A failure here means the skill silently fails to load. These are not preferences; they are runtime validation rules. **Do not check by hand — invoke skill-creator's `quick_validate.py`** (see Step 4a in `SKILL.md`). The script is the canonical enforcer of every rule below; the rules are listed here only for reference and as a fallback when the script is unavailable.
+A failure here means the skill silently fails to load. These are not preferences; they are runtime validation rules. **Do not check by hand — invoke this skill's bundled `quick_validate.py`** (see Step 4a in `SKILL.md`). The script is the canonical enforcer of every rule below; the rules are listed here only for reference.
 
 ```bash
-# From inside .claude/skills/skill-creator/
-python -m scripts.quick_validate <absolute-path-to-target-skill>
+python <path-to-this-skill>/scripts/quick_validate.py <absolute-path-to-target-skill>
 ```
 
 A non-`"Skill is valid!"` exit is a **Critical** finding — quote the script's error message verbatim in the finding's evidence.
 
-Reference list of what the script enforces (apply manually only if the script is unavailable):
+Reference list of what the script enforces (in case the script needs human verification):
 
 - [ ] File begins with `---` on line 1
 - [ ] File contains a closing `---` before the body
