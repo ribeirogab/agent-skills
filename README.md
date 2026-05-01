@@ -1,17 +1,56 @@
 # agent-skills
 
-A collection of reusable [agent skills](https://skills.sh) for any tool that supports the open agent skills standard — Claude Code, Codex, Cursor, OpenCode, Gemini CLI, Aider, Cline, Augment, and others. Skills are framework-agnostic by design: a skill is a folder with a `SKILL.md` and any helpers it needs; agents discover them by description.
-
-The catalog (always reflects what's actually under [`skills/`](skills/)):
-
-- **[`harness`](skills/harness/)** — idempotently scaffolds an agent harness into any repo. Adds a `context/` knowledge vault, an `AGENTS.md` (with a `CLAUDE.md` symlink for back-compat), spec/plan/task templates, plus a set of bundled `harness-*` slash commands (open-pr, learn, spec, review-spec, sweep) and companion skills (brainstorming, recall, writing-plans). Audit-first, autonomous-fix, with a Phase-5 validator. Safe to re-run.
-- **[`skill-improver`](skills/skill-improver/)** — audits an existing agent skill against the canonical authoring rules (frontmatter, layout, body style, progressive disclosure, description quality, degrees of freedom) and applies safe fixes autonomously. Defers high-regression-risk findings for manual review. Self-contained — bundles vendored copies of `quick_validate.py` and `package_skill.py`.
+Reusable [agent skills](https://skills.sh) for any tool that supports the open agent skills standard — Claude Code, Codex, Cursor, OpenCode, Gemini CLI, Aider, Cline, Augment, and others. Skills are framework-agnostic by design: a skill is a folder with a `SKILL.md` and any helpers it needs; agents discover them by description.
 
 > Personal project, solo maintenance, best-effort, no SLA. Published so anyone can pull a skill into their setup.
 
-## Install
+---
 
-Skills are installable via the [skills CLI](https://github.com/vercel-labs/skills) (one command, works with any supported agent):
+## Skills
+
+### `harness`
+
+Idempotently scaffolds an agent harness into any repository — a `context/` knowledge vault, an `AGENTS.md` (with a `CLAUDE.md` symlink for back-compat), spec/plan/task templates, plus a set of bundled `harness-*` slash commands (open-pr, learn, spec, review-spec, sweep) and companion skills (brainstorming, recall, writing-plans). Audit-first, autonomous-fix, with a Phase-5 validator. Safe to re-run.
+
+**Install:**
+
+```bash
+npx skills add ribeirogab/agent-skills --skill harness
+```
+
+**Use:** point an agent at any repo where you want the harness installed.
+
+> "Audit the harness in this repo and scaffold whatever is missing."
+
+After the first run the repo has a working `context/` vault, the `harness-*` commands, and the companion skills, all dogfood-tested by the harness's own 13-check validator.
+
+**Source:** [`skills/harness/`](skills/harness/)
+
+---
+
+### `skill-improver`
+
+Audits an existing agent skill against the canonical authoring rules (frontmatter, layout, body style, progressive disclosure, description quality, degrees of freedom) and applies safe fixes autonomously. Defers high-regression-risk findings for manual review. Self-contained — bundles vendored copies of `quick_validate.py` and `package_skill.py` so it does not require the upstream `skill-creator` to be installed.
+
+**Install:**
+
+```bash
+npx skills add ribeirogab/agent-skills --skill skill-improver
+```
+
+**Use:** point it at any skill folder.
+
+> "Audit the skill at `.claude/skills/my-skill` and apply safe fixes."
+
+The skill walks a 10-section canonical checklist, applies anything `Low` or `Medium` regression-risk autonomously, and produces a final report with a `Skipped` section for `High`-risk findings the maintainer should review by hand.
+
+**Source:** [`skills/skill-improver/`](skills/skill-improver/)
+
+---
+
+## Install — general notes
+
+The [`skills` CLI](https://github.com/vercel-labs/skills) is the canonical way to install any skill from this repo into any supported agent's discovery directory (`.claude/skills/`, `.codex/skills/`, `.cursor/skills/`, `.opencode/skills/`, etc.). Useful flags:
 
 ```bash
 # install a specific skill from this repo
@@ -20,33 +59,17 @@ npx skills add ribeirogab/agent-skills --skill <skill-name>
 # run interactively and pick from the menu
 npx skills add ribeirogab/agent-skills
 
-# global install (available across all agents on the machine)
+# global install — skill becomes available across every agent on the machine
 npx skills add ribeirogab/agent-skills --skill <skill-name> -y -g
 ```
 
-The CLI clones the repo, lets you pick the skill, and writes the right files into your agent's discovery directory (`.claude/skills/`, `.codex/skills/`, `.cursor/skills/`, etc.) automatically. No per-agent install steps.
-
-If you prefer manual install, copy or symlink the skill folder yourself:
+If the CLI is unavailable, manually copy or symlink the skill folder into your agent's discovery directory:
 
 ```bash
 # inside the repo where you want the skill available
 mkdir -p .claude/skills    # or .codex/skills, .cursor/skills, etc.
-cp -r /path/to/agent-skills/skills/harness .claude/skills/harness
+cp -r /path/to/agent-skills/skills/<skill-name> .claude/skills/<skill-name>
 ```
-
-## Use
-
-Once installed, the agent picks up the skill automatically when its description matches your prompt — there is no slash command needed.
-
-For `harness`, run it once per target repo to scaffold the agent infrastructure:
-
-> "Audit the harness in this repo and scaffold whatever's missing."
-
-(or just say `/harness` once if your agent surfaces the skill name as a command.)
-
-For `skill-improver`, point it at an existing skill folder:
-
-> "Audit the skill at `.claude/skills/my-skill` and apply safe fixes."
 
 ## Repository layout
 
