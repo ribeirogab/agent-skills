@@ -1,6 +1,6 @@
 # agent-skills — Agent Instructions
 
-`agent-skills` is the author's personal library of Claude Code skills and slash commands, written in markdown with occasional shell scripts. The flagship is `skills/harness/`, an idempotent scaffolder that installs agent infrastructure into target repos. There is no build system, no package manager, and no test runner at the repo root — each skill is self-contained under `skills/<name>/` with its own `SKILL.md`, optional `references/`, and optional `scaffold/` payload. The repo dogfoods its own harness: `.claude/skills/harness` is a symlink to `skills/harness/`, while the other bundled skills (`harness-recall`, `harness-brainstorming`, `harness-writing-plans`) and the `/harness-*` commands live as real files under `.claude/`.
+`agent-skills` is the author's personal library of agent skills and slash commands, written in markdown with occasional shell scripts. The flagship is `skills/harness/`, an idempotent scaffolder that installs agent infrastructure into target repos. There is no build system, no package manager, and no test runner at the repo root — each skill is self-contained under `skills/<name>/`. The repo dogfoods its own harness: scaffolded helper skills live canonically under `.agents/skills/<name>/` and are exposed via per-agent symlinks (`.claude/skills/<name>` → `.agents/skills/<name>`); the `/harness-*` slash commands live in `.claude/commands/` (Claude Code-specific concept).
 
 ## Before starting any work
 
@@ -58,9 +58,9 @@ Full command catalog: `context/learnings/commands-catalog.md` _(create this note
 | Spec template | `context/specs/_template/` |
 | Note templates (learning, rule) | `context/templates/` |
 
-## Claude Code skills and commands
+## Skills and slash commands
 
-These are committed to `.claude/` and provide the project's agentic workflow.
+Skills live canonically under `.agents/skills/` (agent-agnostic) and are exposed via per-agent symlinks (`.claude/skills/`, `.codex/skills/`, etc.) for whichever agent is in use. Slash commands live in `.claude/commands/` only — slash commands are a Claude Code-specific concept; on other agents the same workflows are invoked via prose prompts.
 
 - **`harness-brainstorming`** — design exploration before writing a spec.
 - **`harness-writing-plans`** — turn an approved design into a task list.

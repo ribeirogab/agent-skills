@@ -22,7 +22,7 @@ Report results as a table. Any `FAIL` triggers an automatic fix attempt using th
 | 2 | constitution.md has no surviving placeholders | FAIL — line 14: "{{Project Name}}" |
 | ... | ... | ... |
 
-### Result: 12/13 PASS — 1 FAIL needs attention
+### Result: 13/14 PASS — 1 FAIL needs attention
 ```
 
 ## Checks
@@ -62,7 +62,7 @@ required=(
   "## After completing a spec"
   "## Commands (most used)"
   "## Knowledge locations"
-  "## Claude Code skills and commands"
+  "## Skills and slash commands"
 )
 missing=()
 for h in "${required[@]}"; do
@@ -114,11 +114,13 @@ ls context/specs/ 2>/dev/null | grep -vE '^_template$|^[0-9]{4}-[0-9]{2}-[0-9]{2
 
 FAIL lists the offending folder names. Fix: rename per the migration prompt in `references/audit-checklist.md`.
 
-### 9. Skills copied — each has its `SKILL.md`
+### 9. Skills installed at the canonical location — each has its `SKILL.md`
+
+Skills are canonically under `.agents/skills/<name>/`. Per-agent symlinks (`.claude/skills/<name>`, etc.) are bonus exposure, not the source of truth.
 
 ```bash
 for s in harness-recall harness-brainstorming harness-writing-plans; do
-  [ -f ".claude/skills/$s/SKILL.md" ] && echo "PASS: $s" || echo "FAIL: $s"
+  [ -f ".agents/skills/$s/SKILL.md" ] && echo "PASS: $s" || echo "FAIL: $s"
 done
 ```
 
@@ -128,20 +130,26 @@ Fix: re-run the skills copy block from `SKILL.md` (Scaffolding section).
 
 ```bash
 fail=0
-for f in .claude/skills/harness-brainstorming/scripts/*.sh; do
+for f in .agents/skills/harness-brainstorming/scripts/*.sh; do
   [ -x "$f" ] || { echo "FAIL: $f not executable"; fail=1; }
 done
 [ $fail -eq 0 ] && echo PASS
 ```
 
-Fix: `chmod +x .claude/skills/harness-brainstorming/scripts/*.sh`.
+Fix: `chmod +x .agents/skills/harness-brainstorming/scripts/*.sh`.
 
 ### 11. Commands copied
 
+Slash commands are Claude Code-specific and only install if `.claude/` is present in the repo. If `.claude/` is absent, this check is `N/A`.
+
 ```bash
-for c in harness-open-pr harness-learn harness-spec harness-review-spec harness-sweep; do
-  [ -f ".claude/commands/$c.md" ] && echo "PASS: $c" || echo "FAIL: $c"
-done
+if [ ! -d .claude ]; then
+  echo "N/A — no .claude/ directory; commands skipped by design"
+else
+  for c in harness-open-pr harness-learn harness-spec harness-review-spec harness-sweep; do
+    [ -f ".claude/commands/$c.md" ] && echo "PASS: $c" || echo "FAIL: $c"
+  done
+fi
 ```
 
 Fix: re-run the commands copy block from `SKILL.md` (Scaffolding section).

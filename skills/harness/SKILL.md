@@ -1,6 +1,6 @@
 ---
 name: harness
-description: "Scaffold or audit the agent harness (context/ vault + AGENTS.md + spec templates + Claude Code skills) in any repo. Idempotent — safe to run repeatedly. Use when the user wants to set up, verify, or fix agent infrastructure in a project."
+description: "Scaffold or audit the agent harness (context/ vault + AGENTS.md + spec templates + bundled skills) in any repo. Agent-agnostic — works with any tool that supports the open agent skills standard (Claude Code, Codex, Cursor, OpenCode, etc.). Idempotent — safe to run repeatedly. Use when the user wants to set up, verify, or fix agent infrastructure in a project."
 ---
 
 # Harness — Idempotent Agent Infrastructure
@@ -64,7 +64,9 @@ For `context/constitution.md`, read `references/constitution-template.md`. It co
 
 For `AGENTS.md` at the repo root, read `references/agents-md-template.md`. Fill `{{Project Name}}`, the project description paragraph, and the `## Commands (most used)` section from Prerequisites. The reference lists all required section headers — none may be missing.
 
-### CLAUDE.md symlink
+### CLAUDE.md symlink (Claude Code back-compat)
+
+`AGENTS.md` is the universal agent entry point. Claude Code historically reads `CLAUDE.md` instead, so a symlink at the repo root keeps it satisfied without duplicating content. Other agents ignore the file.
 
 If `CLAUDE.md` does not exist at the repo root:
 
@@ -85,30 +87,56 @@ Rationale: Obsidian rewrites `app.json`, `appearance.json`, `core-plugins.json`,
 
 ### Skills and commands (copy from scaffold/)
 
-All bundled skills and commands live in `scaffold/` alongside this `SKILL.md`. Copy them into the project's `.claude/`:
+All bundled skills and commands live in `scaffold/` alongside this `SKILL.md`.
+
+**Skills** are agent-agnostic and install canonically under `.agents/skills/<name>/` (the open agent skills standard's location, also discoverable by `npx skills` and similar tooling). For each agent-specific discovery directory already present in the repo (`.claude/`, `.codex/`, `.cursor/`, `.opencode/`, `.aider/`, `.augment/`, etc.), the harness adds a per-skill symlink so that agent picks up the skill without duplicating files on disk:
 
 ```bash
 HARNESS_DIR="<directory where this SKILL.md lives>"
+SKILL_NAMES=(harness-recall harness-brainstorming harness-writing-plans)
 
-# Skills
-cp -r "$HARNESS_DIR/scaffold/skills/harness-recall" .claude/skills/harness-recall
-cp -r "$HARNESS_DIR/scaffold/skills/harness-brainstorming" .claude/skills/harness-brainstorming
-cp -r "$HARNESS_DIR/scaffold/skills/harness-writing-plans" .claude/skills/harness-writing-plans
+# 1. Canonical install — single source of truth on disk
+mkdir -p .agents/skills
+for name in "${SKILL_NAMES[@]}"; do
+  [ -e ".agents/skills/$name" ] && continue   # idempotent: don't overwrite
+  cp -r "$HARNESS_DIR/scaffold/skills/$name" ".agents/skills/$name"
+done
 
-# Commands
-cp "$HARNESS_DIR/scaffold/commands/harness-open-pr.md" .claude/commands/harness-open-pr.md
-cp "$HARNESS_DIR/scaffold/commands/harness-learn.md" .claude/commands/harness-learn.md
-cp "$HARNESS_DIR/scaffold/commands/harness-spec.md" .claude/commands/harness-spec.md
-cp "$HARNESS_DIR/scaffold/commands/harness-review-spec.md" .claude/commands/harness-review-spec.md
-cp "$HARNESS_DIR/scaffold/commands/harness-sweep.md" .claude/commands/harness-sweep.md
+# Ensure scripts are executable (only one skill ships scripts today)
+[ -d .agents/skills/harness-brainstorming/scripts ] && \
+  chmod +x .agents/skills/harness-brainstorming/scripts/*.sh
 
-# Ensure scripts are executable
-chmod +x .claude/skills/harness-brainstorming/scripts/*.sh
+# 2. Per-agent symlinks — only into discovery dirs that already exist
+#    (do NOT auto-create agent dirs; their absence means the user does
+#    not run that agent in this repo).
+for agent_dir in .claude .codex .cursor .opencode .aider .augment; do
+  [ -d "$agent_dir" ] || continue
+  mkdir -p "$agent_dir/skills"
+  for name in "${SKILL_NAMES[@]}"; do
+    target="$agent_dir/skills/$name"
+    [ -e "$target" ] && continue   # idempotent: keep whatever's there
+    ln -s "../../.agents/skills/$name" "$target"
+  done
+done
+```
+
+**Slash commands** are a Claude Code-specific concept (no other current agent has an equivalent), so they install only into `.claude/commands/`. If `.claude/` does not exist in the repo, skip the command copy entirely — the workflows the commands encode are useful in any agent, but the user invokes them via prose prompts on those agents, not via `/foo` syntax.
+
+```bash
+if [ -d .claude ]; then
+  mkdir -p .claude/commands
+  for cmd in harness-open-pr harness-learn harness-spec harness-review-spec harness-sweep; do
+    target=".claude/commands/$cmd.md"
+    [ -e "$target" ] && continue
+    cp "$HARNESS_DIR/scaffold/commands/$cmd.md" "$target"
+  done
+fi
 ```
 
 Rules:
-- Create `.claude/skills/` and `.claude/commands/` if they don't exist.
-- If a skill or command already exists in the project, **skip it** — don't overwrite.
+- Skills always go to `.agents/skills/<name>` first (canonical), then symlinked into existing agent dirs.
+- Existing files are never overwritten — re-runs are no-ops on already-installed items.
+- Per-agent dirs that do not already exist are not auto-created by the skill copy; only an existing dir signals that agent is in use here.
 
 ### Spec folder migration (if drift was reported)
 

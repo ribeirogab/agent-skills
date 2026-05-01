@@ -30,7 +30,7 @@ The audit checklist (`references/audit-checklist.md`) checks for these section h
 - `## After completing a spec`
 - `## Commands (most used)`
 - `## Knowledge locations`
-- `## Claude Code skills and commands`
+- `## Skills and slash commands`
 
 ## Template
 
@@ -88,9 +88,9 @@ Full command catalog: `context/learnings/commands-catalog.md` _(create this note
 | Spec template | `context/specs/_template/` |
 | Note templates (learning, rule) | `context/templates/` |
 
-## Claude Code skills and commands
+## Skills and slash commands
 
-These are committed to `.claude/` and provide the project's agentic workflow.
+Skills are committed to `.agents/skills/` (canonical, agent-agnostic) and exposed via per-agent symlinks (`.claude/skills/`, `.codex/skills/`, etc.) for agents that scan their own discovery dir. Slash commands live in `.claude/commands/` only — slash commands are a Claude Code-specific concept; users on other agents invoke the same workflows via prose prompts.
 
 - **`harness-brainstorming`** — design exploration before writing a spec.
 - **`harness-writing-plans`** — turn an approved design into a task list.

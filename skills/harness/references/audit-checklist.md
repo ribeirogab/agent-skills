@@ -43,12 +43,13 @@ context/
   context/rules/               (directory exists)
 
 AGENTS.md                      (repo root)
-CLAUDE.md                      (symlink → AGENTS.md)
+CLAUDE.md                      (symlink → AGENTS.md, Claude Code back-compat)
 
-.claude/skills/harness-recall/SKILL.md
-.claude/skills/harness-brainstorming/  (full directory)
-.claude/skills/harness-writing-plans/  (full directory)
-.claude/commands/harness-open-pr.md
+.agents/skills/harness-recall/SKILL.md            (canonical, agent-agnostic)
+.agents/skills/harness-brainstorming/             (full directory)
+.agents/skills/harness-writing-plans/             (full directory)
+
+.claude/commands/harness-open-pr.md               (slash commands — Claude Code only)
 .claude/commands/harness-learn.md
 .claude/commands/harness-spec.md
 .claude/commands/harness-review-spec.md
@@ -57,9 +58,17 @@ CLAUDE.md                      (symlink → AGENTS.md)
 .gitignore                     (contains obsidian workspace exclusions)
 ```
 
+### Per-agent skill symlinks (optional, not required)
+
+For every agent-specific discovery directory present in the repo (`.claude/`, `.codex/`, `.cursor/`, `.opencode/`, `.aider/`, `.augment/`, etc.), each scaffold skill above should also be symlinked into that agent's `skills/` subdirectory so the agent can discover it. Example: when `.claude/` exists, `.claude/skills/harness-recall` is a symlink to `../../.agents/skills/harness-recall`.
+
+A missing per-agent symlink is **not `DRIFT`** — only the canonical files under `.agents/skills/` are required. If a per-agent dir exists but lacks the expected symlinks, the harness re-creates them on the next run (no prompt needed; symlinks are non-destructive). If a per-agent dir does not exist at all, no symlinks are created (the absence signals the user does not run that agent in this repo).
+
 ## Additional checks
 
-### CLAUDE.md is a symlink
+### CLAUDE.md is a symlink (Claude Code back-compat)
+
+`AGENTS.md` is the universal agent entry point. Claude Code historically reads `CLAUDE.md` instead, so the harness keeps a `CLAUDE.md → AGENTS.md` symlink at the repo root as a back-compat concession. Other agents ignore the file.
 
 `CLAUDE.md` must be a symlink pointing to `AGENTS.md` — not a copy, not a separate file. Verify with `readlink CLAUDE.md` returning `AGENTS.md`. If it is a regular file or points elsewhere, status is `DRIFT`.
 
@@ -94,7 +103,7 @@ If `.gitignore` is missing, or contains the older fine-grained pattern set (`wor
 - `## After completing a spec`
 - `## Commands (most used)`
 - `## Knowledge locations`
-- `## Claude Code skills and commands`
+- `## Skills and slash commands`
 
 When reporting drift, name the missing section(s) explicitly so the fix step knows what to insert.
 
