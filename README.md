@@ -24,7 +24,7 @@ npx skills add ribeirogab/agent-skills --skill harness
 
 After the first run the repo has a working `context/` vault, the `harness-*` commands, and the companion skills, all dogfood-tested by the harness's own 13-check validator.
 
-**Source:** [`skills/harness/`](skills/harness/)
+**Source:** [`skills/harness/SKILL.md`](skills/harness/SKILL.md)
 
 ---
 
@@ -44,32 +44,9 @@ npx skills add ribeirogab/agent-skills --skill skill-improver
 
 The skill walks a 10-section canonical checklist, applies anything `Low` or `Medium` regression-risk autonomously, and produces a final report with a `Skipped` section for `High`-risk findings the maintainer should review by hand.
 
-**Source:** [`skills/skill-improver/`](skills/skill-improver/)
+**Source:** [`skills/skill-improver/SKILL.md`](skills/skill-improver/SKILL.md)
 
 ---
-
-## Install — general notes
-
-The [`skills` CLI](https://github.com/vercel-labs/skills) is the canonical way to install any skill from this repo into any supported agent's discovery directory (`.claude/skills/`, `.codex/skills/`, `.cursor/skills/`, `.opencode/skills/`, etc.). Useful flags:
-
-```bash
-# install a specific skill from this repo
-npx skills add ribeirogab/agent-skills --skill <skill-name>
-
-# run interactively and pick from the menu
-npx skills add ribeirogab/agent-skills
-
-# global install — skill becomes available across every agent on the machine
-npx skills add ribeirogab/agent-skills --skill <skill-name> -y -g
-```
-
-If the CLI is unavailable, manually copy or symlink the skill folder into your agent's discovery directory:
-
-```bash
-# inside the repo where you want the skill available
-mkdir -p .claude/skills    # or .codex/skills, .cursor/skills, etc.
-cp -r /path/to/agent-skills/skills/<skill-name> .claude/skills/<skill-name>
-```
 
 ## Repository layout
 
@@ -89,10 +66,6 @@ agent-skills/
 ```
 
 The repository also contains `.claude/`, `context/`, and `evals/` — local-only dirs used by the maintainer to dogfood the harness, run skill evaluations, and store personal project notes. They are not part of the published surface and are not what `npx skills add` installs.
-
-## Authoring or extending
-
-The canonical authoring rules — frontmatter contract, directory layout, body-style conventions, progressive disclosure, degrees-of-freedom — are baked into `skill-improver`. The fastest path to a clean skill is to invoke `skill-improver` against your draft and let it tell you what to fix. See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the full quality bar and PR checklist.
 
 ## License
 
