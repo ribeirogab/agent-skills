@@ -1,8 +1,6 @@
 ---
 name: harness
 description: "Scaffold or audit the agent harness (context/ vault + AGENTS.md + spec templates + Claude Code skills) in any repo. Idempotent — safe to run repeatedly. Use when the user wants to set up, verify, or fix agent infrastructure in a project."
-user-invocable: true
-argument-hint: "<optional: project name>"
 ---
 
 # Harness — Idempotent Agent Infrastructure
@@ -13,11 +11,11 @@ Set up or audit the agent harness in the current repo. Safe to run multiple time
 
 ## Mode of Operation
 
-This skill is **audit-first**. It never creates or modifies files without asking.
+This skill is **audit-first, then autonomous**. Audit, report, and proceed to scaffold or repair without further prompting. The one exception is destructive operations (renaming or deleting existing files) — surface those before acting.
 
 1. **Audit** — scan the repo and build a checklist of what exists vs what's expected.
 2. **Report** — show the checklist to the user with status per item.
-3. **Fix** — if issues are found, ask "Want me to fix these?" and only proceed on confirmation.
+3. **Fix** — if issues are found, scaffold or repair them directly. Confirm only before destructive ops (e.g., renaming a spec folder).
 4. **Validate** — after any creation or fix (and at the end of an audit-only run), run Phase 5 validation.
 
 If the audit finds nothing wrong **and** validation passes, just say "Harness is healthy." and stop.
@@ -36,11 +34,9 @@ Render the audit table per the format in `references/audit-checklist.md`. Summar
 ### Summary
 - X/Y items OK
 - N missing, M drifted
-
-Want me to fix the issues?
 ```
 
-If the user confirms, proceed to Phase 3. If everything was `OK`, skip to Phase 5 (validation).
+If anything is missing or drifted, proceed to Phase 3. If everything was `OK`, skip to Phase 5 (validation).
 
 ## Phase 3 — Prerequisites (first-time or fix)
 

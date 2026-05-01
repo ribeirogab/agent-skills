@@ -2,7 +2,14 @@
 
 Run this checklist after **any** scaffold or fix run, and at the end of an audit even when nothing was missing. Confirms the harness is structurally sound. Each check is a quick command with a clear pass/fail.
 
-Report results as a table. Any `FAIL` is surfaced and the user is asked: "Want me to fix the failed checks?"
+Report results as a table. Any `FAIL` triggers an automatic fix attempt using the recipe under each check, then re-runs the validator. The orchestrator does not prompt the user before fixing — it loops until the table is clean or it determines a check cannot be auto-repaired.
+
+## Contents
+
+- [Output format](#output-format)
+- [Checks](#checks) — 13 numbered checks (CLAUDE.md symlink, placeholder sweeps, AGENTS.md headers, frontmatter, Obsidian JSON, .gitignore, spec folder naming, copied skills/commands, executable scripts, MOC placeholders, spec template Acceptance Criteria)
+- [When everything passes](#when-everything-passes)
+- [When something fails](#when-something-fails)
 
 ## Output format
 
@@ -173,8 +180,4 @@ Harness is structurally sound.
 
 ## When something fails
 
-Report each FAIL with the specific reason (file path, missing line, parse error). Then ask:
-
-> "Want me to fix the failed checks?"
-
-On confirmation, apply the fixes listed under each check above and re-run validation. Loop until clean or the user stops.
+Report each FAIL with the specific reason (file path, missing line, parse error), then apply the fixes listed under each check above and re-run validation. Loop until clean. Only stop the loop when a check has no auto-repair recipe or the same fix has failed twice — in that case, surface the residual failure to the user with the exact reason.

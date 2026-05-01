@@ -2,6 +2,16 @@
 
 Full inventory of what the harness audit checks. The orchestrator (`SKILL.md`) loads this file at the start of an audit run.
 
+## Contents
+
+- [Status meanings](#status-meanings)
+- [Files and directories to check](#files-and-directories-to-check)
+- [Additional checks](#additional-checks)
+- [AGENTS.md drift detection (required headers)](#agentsmd-drift-detection-required-headers)
+- [Constitution drift detection (required sections)](#constitution-drift-detection-required-sections)
+- [Frontmatter sanity](#frontmatter-sanity)
+- [Report format](#report-format)
+
 ## Status meanings
 
 For each item, check existence and content correctness. Report status as:
@@ -122,8 +132,6 @@ Each MOC and template must begin with valid YAML frontmatter (between `---` fenc
 ### Summary
 - X/Y items OK
 - N missing, M drifted
-
-Want me to fix the issues?
 ```
 
-If everything passes, the orchestrator should still run Phase 5 validation (see `references/validation.md`) before reporting "Harness is healthy."
+After rendering this report, the orchestrator proceeds directly to Phase 3 to fix any `MISSING` or `DRIFT` items — no mid-run confirmation. Spec-folder renames (a destructive op) are the only exception and require an explicit prompt per the migration rules above. If everything passes, the orchestrator skips Phase 3 and runs Phase 5 validation (see `references/validation.md`) before reporting "Harness is healthy."
