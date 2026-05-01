@@ -1,6 +1,6 @@
 # agent-skills
 
-Reusable [agent skills](https://skills.sh) for any tool that supports the open agent skills standard — Claude Code, Codex, Cursor, OpenCode, Gemini CLI, Aider, Cline, Augment, and others. Skills are framework-agnostic by design: a skill is a folder with a `SKILL.md` and any helpers it needs; agents discover them by description.
+Reusable agent skills for any tool that supports the open agent skills standard — Claude Code, Codex, Cursor, OpenCode, Gemini CLI, Aider, Cline, Augment, and others. Skills are framework-agnostic by design: a skill is a folder with a `SKILL.md` and any helpers it needs; agents discover them by description.
 
 > Personal project, solo maintenance, best-effort, no SLA. Published so anyone can pull a skill into their setup.
 
