@@ -1,0 +1,54 @@
+{
+  "skill_name": "skill-improver",
+  "evals": [
+    {
+      "id": 0,
+      "eval_name": "audits-clean-skill-without-inventing-findings",
+      "prompt": "Audit the skill at /Users/gabriel/www/ribeirogab/agent-skills/evals/skill-improver/fixtures/clean-skill against Anthropic's canonical authoring rules. Apply any safe improvements autonomously per the regression-risk grading. Defer High-risk findings to a final report. Produce a categorized final report.",
+      "files": [],
+      "expected_output": "A final report listing 0 critical, 0 structural, and at most some opportunity findings. The skill is intentionally clean — the auditor must NOT invent findings to fill space.",
+      "assertions": [
+        "the report has the canonical structure (severity counts: Critical / Structural / Stylistic / Opportunity, then Applied list, then Skipped list)",
+        "Critical findings count equals 0",
+        "Structural findings count equals 0",
+        "the preserved description is quoted verbatim and matches the original 'Extracts text from PDF files...'",
+        "no files inside the clean-skill fixture were deleted",
+        "no SKILL.md was rewritten in a way that altered its meaning"
+      ]
+    },
+    {
+      "id": 1,
+      "eval_name": "audits-broken-frontmatter-with-multiple-critical-findings",
+      "prompt": "Audit the skill at /Users/gabriel/www/ribeirogab/agent-skills/evals/skill-improver/fixtures/broken-frontmatter against Anthropic's canonical authoring rules. Apply autonomous fixes for None/Low/Medium-risk findings. Defer High-risk findings to a final report. Produce a categorized final report.",
+      "files": [],
+      "expected_output": "A final report identifying at least 4 distinct critical frontmatter violations (reserved-word name 'claude-pdf-helper', angle brackets in description, description length > 1024 chars, unknown top-level key 'random_extra_field'). The agent should refuse to silently rewrite the description's meaning, even though it is over-length and contains forbidden characters — those are flagged for manual review at High risk because fixing them requires changing what the skill is supposed to do.",
+      "assertions": [
+        "the report identifies the reserved-word name 'claude-pdf-helper' as a critical finding",
+        "the report identifies the angle brackets '<pdf>' in the description as a critical finding",
+        "the report identifies the description length (over 1024 chars) as a critical finding",
+        "the report identifies 'random_extra_field' as an unknown top-level key (critical finding)",
+        "the unknown key 'random_extra_field' is removed autonomously (Low risk — pure deletion of a forbidden key)",
+        "the description is NOT rewritten autonomously to fit under 1024 chars or to remove angle brackets (those changes are deferred as High risk because they require altering meaning)",
+        "the final report includes a Skipped section listing the deferred description rewrite"
+      ]
+    },
+    {
+      "id": 2,
+      "eval_name": "audits-broken-layout-with-structural-and-stylistic-findings",
+      "prompt": "Audit the skill at /Users/gabriel/www/ribeirogab/agent-skills/evals/skill-improver/fixtures/broken-layout against Anthropic's canonical authoring rules. Apply autonomous fixes for None/Low/Medium-risk findings. Defer High-risk findings to a final report. Destructive operations (file deletion) must be deferred. Produce a categorized final report.",
+      "files": [],
+      "expected_output": "A final report identifying the structural violations (README.md inside the skill folder, references nested two levels deep, backslash paths in SKILL.md) and stylistic violations (vague description, first-person voice, second-person voice, inconsistent terminology). The README.md and the nested directory are NOT deleted autonomously — destructive ops are deferred as High risk. First-person rewording of the body is applied autonomously.",
+      "assertions": [
+        "the report identifies the README.md inside the skill folder as a structural finding",
+        "the report identifies the nested reference 'references/nested/deep-doc.md' as a structural finding",
+        "the report identifies at least one backslash path violation",
+        "the report identifies first-person voice in the body as a stylistic finding",
+        "the report identifies the vague description 'Helps with stuff.' as a stylistic finding",
+        "the README.md inside the skill folder is NOT deleted by the agent (destructive op deferred as High risk)",
+        "the nested 'references/nested/' directory is NOT deleted by the agent",
+        "the body's first-person voice is rewritten autonomously to third-person imperative",
+        "the final report includes a Skipped section listing the deferred file/directory deletions"
+      ]
+    }
+  ]
+}

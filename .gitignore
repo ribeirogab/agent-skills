@@ -10,6 +10,12 @@ __pycache__/
 # (pattern: <skill-name>-skill-<8-hex-uuid>.md, used to test triggering)
 .claude/commands/*-skill-[a-f0-9]*.md
 
-# Skill workspaces — runtime artifacts: eval sets, results, benchmarks, viewer output
-# Workspaces are local-only by design; nothing inside should be tracked.
+# Skill workspaces — runtime artifacts: results, benchmarks, viewer output.
+# evals/<skill>/workspace/ is the active location (sibling of fixtures/ and evals.json).
+# skills/*-workspace/ is the legacy location; kept ignored for safety on older clones.
+evals/*/workspace/
 skills/*-workspace/
+
+# .skill packaging artifacts produced by skill-creator/scripts/package_skill.py
+*.skill
+.claude/skills/skill-creator/*.skill

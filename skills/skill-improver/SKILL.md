@@ -1,6 +1,6 @@
 ---
 name: skill-improver
-description: Audits an existing Claude Code skill against Anthropic's canonical authoring rules (frontmatter, directory layout, SKILL.md body style, progressive disclosure, description quality, degrees of freedom) and applies improvements autonomously — only findings classified as High regression risk are deferred to the final report. The target skill's stated purpose is preserved verbatim. Use this skill when the user asks to improve, audit, refactor, polish, optimize, review, fix, or check an existing skill at a known path (anywhere under `.claude/skills/` or `skills/`), with phrasings like "polish my pdf skill", "audit my harness skill", "refactor SKILL.md", "fix this skill", or "is my skill following best practices". Do NOT use to create a skill from scratch (that is `skill-creator`), to evaluate runtime output quality on real test prompts (that is `skill-creator`'s eval workflow), or to improve non-skill artifacts like READMEs, MCP tool descriptions, or general project docs.
+description: Audits an existing Claude Code skill against Anthropic's canonical authoring rules (frontmatter, directory layout, SKILL.md body style, progressive disclosure, description quality, degrees of freedom) and applies improvements autonomously — only findings classified as High regression risk are deferred to the final report. The target skill's stated purpose is preserved verbatim. Use this skill when the user asks to improve, audit, refactor, polish, optimize, review, fix, or check an existing skill at a known path (anywhere under `.claude/skills/` or `skills/`), with phrasings like "polish the pdf skill", "audit the harness skill", "refactor SKILL.md", "fix this skill", or "is this skill following best practices". Do NOT use to create a skill from scratch (that is `skill-creator`), to evaluate runtime output quality on real test prompts (that is `skill-creator`'s eval workflow), or to improve non-skill artifacts like READMEs, MCP tool descriptions, or general project docs.
 ---
 
 # Skill Improver
@@ -23,13 +23,13 @@ The target skill's `description` field is the source of truth for what the skill
 
 A proposal that fails any of the three is not applied automatically. It is surfaced as a flagged proposal with the regression risk explained, so the user can decide.
 
-The phrase "do no harm" is more important here than "be thorough". If you cannot tell whether a change is safe, default to surfacing it as a flagged proposal rather than applying it.
+The phrase "do no harm" is more important here than "be thorough". When safety is unclear, default to classifying the change as `High` and skipping it rather than applying it.
 
 ## Workflow
 
 The user invoked this skill so the work would get done. Run the whole workflow autonomously without pausing for input, then deliver one consolidated report at the end. Do not ask the user "should I apply this?" mid-run — use the regression-risk classification (step 6) to decide what to apply and what to skip.
 
-Copy this checklist into the conversation and tick items as you progress:
+Copy this checklist into the conversation and tick items as work progresses:
 
 ```
 - [ ] 1. Locate the target skill (resolve any symlinks)
@@ -53,7 +53,7 @@ Ask the user for the skill's path if not already provided. Common locations:
 ~/.claude/skills/<name>/
 ```
 
-If the path is a symlink, resolve it with `readlink` or `readlink -f` and operate on the canonical source. Editing through a symlink works for files, but you must know whether the source is shared (e.g., a vendored skill) before applying changes — improvements to a symlinked source affect every consumer of that symlink.
+If the path is a symlink, resolve it with `readlink` or `readlink -f` and operate on the canonical source. Editing through a symlink works for files, but the canonical source may be shared (e.g., a vendored skill consumed by multiple repos) — improvements to a symlinked source affect every consumer of that symlink, so confirm the source's scope before applying.
 
 ### Step 2: Read and inventory
 
@@ -110,7 +110,7 @@ For each finding, draft the concrete change internally and classify its regressi
 - `Medium` — narrows or expands the description's triggering coverage; or rewrites a non-load-bearing prose section that some agents might rely on stylistically. Apply if it expands coverage or strictly improves clarity; skip if it narrows coverage.
 - `High` — touches load-bearing instructions, removes or rewrites scripts, deletes files (any files), changes the description's *meaning* rather than its wording. Skip and defer to the user.
 
-Never present "Option A or Option B" choices to the user — pick the single best change yourself. If you cannot decide between two valid options, classify it as `High` (judgment call) and skip.
+Never present "Option A or Option B" choices to the user — pick the single best change. When two valid options are equally defensible, classify the finding as `High` (judgment call) and skip.
 
 The "preserve purpose" rule is automatic, not a question: any proposed change that alters the description's meaning is reclassified to `High` and skipped, no exceptions.
 
