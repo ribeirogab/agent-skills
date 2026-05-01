@@ -1,17 +1,17 @@
 ---
 name: Bug report
-about: Report a problem with a skill or command in this repository
+about: Report a problem with a skill in this repository
 title: "[bug] "
 labels: ["bug"]
 ---
 
-## Skill or command affected
+## Skill affected
 
-(e.g. `skills/skill-improver`, `.claude/commands/harness-sweep`, `.claude/skills/harness-recall`)
+Path under `skills/` (e.g. `skills/harness`, `skills/skill-improver`).
 
-## Claude Code version and operating system
+## Agent and version
 
-(output of `claude --version`, plus macOS / Linux / Windows version)
+Which agent runtime you used and its version (e.g. Claude Code 2.1.123, Codex CLI, Cursor 0.42, OpenCode, etc.) plus the operating system.
 
 ## Reproduction steps
 

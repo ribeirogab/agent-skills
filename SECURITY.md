@@ -2,13 +2,13 @@
 
 ## Reporting a vulnerability
 
-If you find a security issue in any skill or command in this repository, please report it privately by emailing **gblosr@gmail.com**. Do not open a public issue or pull request that describes the vulnerability — that exposes other users before a fix is available.
+If you find a security issue in any skill in this repository, please report it privately by emailing **gblosr@gmail.com**. Do not open a public issue or pull request that describes the vulnerability — that exposes other users before a fix is available.
 
 When reporting, please include:
 
-- The skill or command affected (path under `skills/`, `.claude/skills/`, or `.claude/commands/`).
+- The skill affected (path under `skills/`).
 - A concrete description of the issue and how to reproduce it.
-- The Claude Code version and operating system you observed it on.
+- The agent and version you observed it on (Claude Code, Codex, Cursor, OpenCode, etc.) and the operating system.
 - Any suggested mitigation, if you have one.
 
 ## Response expectation
@@ -21,22 +21,20 @@ If a report goes unanswered for more than two weeks, a polite follow-up email is
 
 In scope:
 
-- Skills under `skills/` and `.claude/skills/`.
-- Commands under `.claude/commands/`.
-- Vendored third-party content **only when** the issue is specific to how this repository ships or wraps it. Issues in upstream content (e.g., the canonical Anthropic `skill-creator`) should be reported to the upstream project — see [`NOTICE.md`](NOTICE.md) for source URLs.
+- Skills under [`skills/`](skills/) — the published surface that `npx skills add` installs.
+- Vendored third-party content inside a published skill **only when** the issue is specific to how this repository ships or wraps it. Issues in upstream content should be reported to the upstream project — see [`NOTICE.md`](NOTICE.md) for source URLs.
 
 Out of scope:
 
-- The `context/` knowledge vault — it is the maintainer's personal notes and not consumed by skill execution.
-- The `evals/` workspace artifacts — they are runtime test outputs.
-- Vulnerabilities in Claude Code itself, the Anthropic API, or any third-party service. Report those to the corresponding vendor.
+- The `.claude/`, `context/`, and `evals/` directories — maintainer-local content (dogfooded harness output, personal knowledge vault, eval workspaces). Not consumed by `npx skills add` and not part of the published skill surface.
+- Vulnerabilities in any agent runtime (Claude Code, Codex, Cursor, etc.), the underlying model APIs, or any third-party service. Report those to the corresponding vendor.
 
 ## Threat model
 
-Skills in this repository are markdown instructions executed by Claude Code, occasionally with small bundled scripts (Python, bash). The skills do not process untrusted user input as part of their normal operation; they receive instructions from the user invoking the skill in their own Claude Code session. The most realistic risks are:
+Skills in this repository are markdown instructions loaded by an agent (Claude Code, Codex, Cursor, OpenCode, or any other tool that supports the open agent skills standard), occasionally with small bundled scripts (Python, bash). The skills do not process untrusted user input as part of their normal operation; they receive instructions from the user invoking the skill in their own agent session. The most realistic risks are:
 
-- A skill or command that prompts Claude to execute a destructive action without surfacing it to the user.
+- A skill that prompts the agent to execute a destructive action without surfacing it to the user first.
 - A bundled script with a path-traversal, command-injection, or credential-leak bug.
-- A vendored skill carrying a known upstream issue that this repository did not patch.
+- A vendored upstream piece carrying a known issue that this repository did not patch.
 
 Reports along any of those lines are welcome and will be handled with care.

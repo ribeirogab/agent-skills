@@ -50,7 +50,7 @@ The PR template carries this checklist; the items below explain each entry.
 - [ ] **`NOTICE.md` updated** when vendored content is refreshed or modified.
 - [ ] **No edits under `context/`, `.claude/`, or `evals/`** (maintainer-local dirs, out of scope).
 - [ ] **Commit messages** follow Conventional Commits style (`feat(<scope>): ...`, `fix(<scope>): ...`, `docs: ...`, `chore: ...`).
-- [ ] **No `Co-Authored-By: Claude` footers** in commits or PR description.
+- [ ] **No AI-attribution footers** in commits or PR description (e.g. `Co-Authored-By: Claude`, `Generated with Cursor`, `Co-authored-by: Codex`, etc.).
 
 ## Reporting bugs
 
