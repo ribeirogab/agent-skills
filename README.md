@@ -2,6 +2,8 @@
 
 My personal collection of [Agent Skills](https://agentskills.io) — self-contained folders of instructions and resources that agents like Claude Code load on demand to perform specialized tasks.
 
+Browse this collection on [skills.sh](https://www.skills.sh/ribeirogab/agent-skills).
+
 ## Skills
 
 | Skill | Description |
@@ -9,6 +11,14 @@ My personal collection of [Agent Skills](https://agentskills.io) — self-contai
 | [spec-orchestrator-handoff](skills/spec-orchestrator-handoff/SKILL.md) | Writes the opening handoff for the orchestrator session of a layered delivery from a spec (URL, local file path, or pasted text) — one file in the system temp directory, the path printed as the only output. |
 
 ## Installation
+
+### skills CLI (any agent)
+
+Installs into 20+ agents — Claude Code, Codex, Cursor, Gemini CLI, GitHub Copilot, and more:
+
+```bash
+npx skills add ribeirogab/agent-skills
+```
 
 ### Claude Code (plugin marketplace)
 
