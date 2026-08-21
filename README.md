@@ -1,8 +1,6 @@
 # agent-skills
 
-My personal collection of [Agent Skills](https://agentskills.io) — self-contained folders of instructions and resources that agents like Claude Code load on demand to perform specialized tasks.
-
-Browse this collection on [skills.sh](https://www.skills.sh/ribeirogab/agent-skills).
+My personal collection of [Agent Skills](https://agentskills.io) — self-contained folders of instructions and resources that AI agents load on demand to perform specialized tasks.
 
 ## Skills
 
@@ -12,42 +10,17 @@ Browse this collection on [skills.sh](https://www.skills.sh/ribeirogab/agent-ski
 
 ## Installation
 
-### skills CLI (any agent)
-
-Installs into 20+ agents — Claude Code, Codex, Cursor, Gemini CLI, GitHub Copilot, and more:
+Works with 20+ agents — Claude Code, Codex, Cursor, Gemini CLI, GitHub Copilot, and more:
 
 ```bash
 npx skills add ribeirogab/agent-skills
 ```
 
-### Claude Code (plugin marketplace)
-
-```
-/plugin marketplace add ribeirogab/agent-skills
-/plugin install ribeirogab-skills@agent-skills
-```
-
-### Manual
-
-Copy any skill folder into your skills directory:
+To install a single skill:
 
 ```bash
-cp -R skills/spec-orchestrator-handoff ~/.claude/skills/
+npx skills add ribeirogab/agent-skills --skill spec-orchestrator-handoff
 ```
-
-Personal skills live in `~/.claude/skills/`; project skills live in `.claude/skills/` inside the project.
-
-## Structure
-
-Each skill is a self-contained directory under `skills/`:
-
-```
-skills/<skill-name>/
-├── SKILL.md        # frontmatter (name, description) + instructions
-└── references/     # optional supporting files loaded on demand
-```
-
-The format follows the [Agent Skills specification](https://github.com/anthropics/skills).
 
 ## License
 
