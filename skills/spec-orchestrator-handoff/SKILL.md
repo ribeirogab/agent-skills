@@ -38,7 +38,7 @@ From the repository come the PR command (what the repository declares; without a
 
 One call of the host's native selector, two decisions. Neither has a default, neither is skippable. Without a selector in the host, print the options and wait — a fallback, not a norm.
 
-1. **Executor model** — options read from `models.md` in this skill's directory; `Do not set` and `Other` are fixed and always included. With `Do not set` chosen, the `Executor model:` line simply does not exist in the handoff — no placeholder, no suggestion. A model typed through `Other` goes as it came, unnormalized, and is never written back to `models.md`.
+1. **Executor model** — exactly two paths, no preset list: `No preference` and a free-text field (the host's `Other` slot or equivalent). With `No preference` chosen, the `Executor model:` line simply does not exist in the handoff — no placeholder, no suggestion. A model typed as free text goes as it came, unnormalized.
 2. **Pipeline** — `Suggest now` (assisted) or `Leave to derive` (autonomous).
 
 Greenfield removes the pipeline decision — the pipeline automatically becomes a derivation instruction — and the selector carries only the model decision.
@@ -50,7 +50,7 @@ Greenfield removes the pipeline decision — the pipeline automatically becomes 
 
 ### The approval loop
 
-These are two steps, in this order, and the order is the point:
+The approval happens in the chat, in plain text — no selector, no buttons, ever. Two steps, in this order, and the order is the point:
 
 1. **Print the block** as response text, in this exact shape:
 
@@ -63,11 +63,11 @@ Suggested pipeline — <repository>
 Not included: <what stays out and why>
 ```
 
-2. **Only then** open the selector, with `Approve` and `Adjust`.
+2. **End the turn and wait** for the user's typed reply. The block closes with one line asking for approval or adjustments — nothing more.
 
-The block comes **before** the question and **outside** it. Never describe the pipeline inside the options, never compress the block into one sentence, never write it only in thinking or inside a tool call, and never ask `Approve` about a block the user has not seen — asking approval of what was not shown is the same as not asking. The question without the printed block is an execution error, not an economy of space.
+Never open a selector for this approval, never put the block or the decision inside a question widget, never compress the block into one sentence, and never write it only in thinking or inside a tool call. The user must see the whole block as chat text before anything is asked of them.
 
-`Adjust` is free text: apply it, print the whole revised block again, and reopen `Approve` / `Adjust` until approved. Approved, the block becomes the `Pipeline per layer` section of the handoff.
+The reply is read from the chat: a plain affirmation (`ok`, `approved`, `looks good`, `tudo certo`, and the like) approves; anything that describes a change is an adjustment — apply it, print the whole revised block again, and wait again, until an affirmation comes. Approved, the block becomes the `Pipeline per layer` section of the handoff.
 
 Hard naming rule: no step names a tool this skill did not confirm in the delivery repository. A generic step is a name, what sustains it, and the `(hard gate)` mark when it is one. What counts as review approval, as deploy, as validation, comes from the repository or becomes a derivation instruction.
 
