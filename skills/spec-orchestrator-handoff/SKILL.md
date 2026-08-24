@@ -38,10 +38,10 @@ From the repository come the PR command (what the repository declares; without a
 
 One call of the host's native selector, two decisions. Neither has a default, neither is skippable. Without a selector in the host, print the options and wait — a fallback, not a norm.
 
-1. **Executor model** — exactly two paths, no preset list: `No preference` and a free-text field (the host's `Other` slot or equivalent). With `No preference` chosen, the `Executor model:` line simply does not exist in the handoff — no placeholder, no suggestion. A model typed as free text goes as it came, unnormalized.
+1. **Sub-agent config** — exactly two paths, no preset list: `No preference` and a free-text field (the host's `Other` slot or equivalent). The free text is a policy, not just a model name: it can name several models and describe when the orchestrator uses each — roles, effort levels, boundaries, per kind of work. Whatever comes goes into the handoff verbatim, unnormalized; interpreting and routing it is the orchestrator's work. A long config fits badly in a selector field: a local file path typed there is read and embedded, and a config pasted in the chat — before the question or as the answer to it — counts the same. With `No preference` chosen, the handoff carries no sub-agent section — no placeholder, no suggestion.
 2. **Pipeline** — `Suggest now` (assisted) or `Leave to derive` (autonomous).
 
-Greenfield removes the pipeline decision — the pipeline automatically becomes a derivation instruction — and the selector carries only the model decision.
+Greenfield removes the pipeline decision — the pipeline automatically becomes a derivation instruction — and the selector carries only the sub-agent decision.
 
 ## The pipeline
 
@@ -77,22 +77,23 @@ Derived only when the spec is a tracker URL (Linear, GitHub Issues, Jira, and th
 
 ## The handoff
 
-`references/handoff-example.md` is the mold for structure, order, and grammar. It shows the fullest form — embedded spec, defined pipeline, executor model present; a delivery without one of those omits the line or section, nothing replaces it. The handoff is written entirely in English. The skeleton:
+`references/handoff-example.md` is the mold for structure, order, and grammar. It shows the fullest form — embedded spec, defined pipeline, sub-agent config present; a delivery without one of those omits the line or section, nothing replaces it. The handoff is written entirely in English. The skeleton:
 
 1. **Title** — `# Orchestration — <spec identifier>`.
 2. **The mandate** — the first line, with the end criterion: the session is the orchestrator, and the turn ends only when every layer has passed the last step of the pipeline, with the proof that step demands.
-3. **The facts** — `Spec:`, `Repository:`, `Executor model:` (optional).
+3. **The facts** — `Spec:`, `Repository:`.
 4. **`## Spec`** — only when the content must be embedded.
 5. **`## Delivery rules`** — only facts confirmed in the repository; an unconfirmed path becomes a derivation instruction.
 6. **`## Process`** — four steps: step zero (read everything; done when the orchestrator can declare the state and the rules), first report (declare the layer cut and the completion-percentage criterion, explicit and stable; a report is information, never an approval request), layers (one executor per layer, pipeline enforced step by step; sequential, parallel, or mixed is the orchestrator's decision — in doubt, discipline), final report (consolidate pending items into a single DEFERRED.md and deliver the whole list; a pending item does not change the cut and does not enter the percentage).
 7. **`## Pipeline per layer`** — the numbered pipeline, each step with what sustains it and the `(hard gate)` mark.
 8. **`## Proof`** — proof is a verifiable reference: a SHA, a run URL, a command output, a resource id. An executor claim without proof does not close a step; what sustains a hard gate the orchestrator confirms alone.
 9. **`## Executors`** — all code comes from executors (subagents with the complete instructions of their layer); the orchestrator's work is reviewing and operating the hard gates, which run in the main session. Deploys to the same target are a queue of one. Control returns to the user only on a real blocker; ending the turn telling the user to open a session is a failure.
-10. **`## Deferred work — DEFERRED.md`** — a pending item discovered on the way does not enter scope: the executor notes it (one line: what, where, why) and reports it to the orchestrator; consolidation is the orchestrator's, in the final report. With a tracker, the DEFERRED.md is also attached to the spec; without one, it is only delivered.
+10. **`## Sub-agent config`** — only when the user provided one. One fixed opening line — the config governs every subagent the orchestrator opens (executors, reviewers, critics) and which entry applies to each situation is the orchestrator's reading — followed by the user's text verbatim, untouched. Without a config, the section does not exist and subagents run on the host's default.
+11. **`## Deferred work — DEFERRED.md`** — a pending item discovered on the way does not enter scope: the executor notes it (one line: what, where, why) and reports it to the orchestrator; consolidation is the orchestrator's, in the final report. With a tracker, the DEFERRED.md is also attached to the spec; without one, it is only delivered.
 
 ## Slots and anti-invention
 
-Fill only what is at hand: the spec, the repository, the model, the user's adjustments, the confirmed paths, and the pipeline when defined. The rest — current state, preflight checks, the proof of each gate, the layer cut — comes out as derivation instructions.
+Fill only what is at hand: the spec, the repository, the sub-agent config, the user's adjustments, the confirmed paths, and the pipeline when defined. The rest — current state, preflight checks, the proof of each gate, the layer cut — comes out as derivation instructions.
 
 Unconfirmed data becomes a derivation instruction, never data. An unconfirmed check, a script name, a host URL, a lane name, a file not seen to exist — without the datum, write the instruction. Inventing is worse than omitting: an invented datum in the handoff crosses the whole delivery with nobody there to contest it.
 

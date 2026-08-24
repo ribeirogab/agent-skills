@@ -4,7 +4,6 @@ You are the orchestrator of this delivery. Your turn ends only when every layer 
 
 Spec: embedded below
 Repository: acme/route-planner on GitHub
-Executor model: GPT Luna (max)
 
 ## Spec
 
@@ -44,6 +43,14 @@ Proof is a verifiable reference: a SHA, a run URL, a command output, a resource 
 ## Executors
 
 All code comes from executors: subagents opened with the complete instructions of their layer. Your work is reviewing their output and operating the hard gates, which run in the main session. Deploys to the same target are a queue of one. Control returns to the user only on a real blocker; ending the turn by telling the user to open a session is a failure.
+
+## Sub-agent config
+
+This config governs every subagent you open — executors, reviewers, critics. Which entry applies to each situation is your reading.
+
+- Luna: use as a leaf agent for bounded, verifiable work: research, evidence collection, CI inspection, defined workflow execution, small implementation tasks, and focused reviews. Use `xhigh` by default and `max` when quality is critical. Boundary: return evidence and results; leave high-risk decisions and coordination to the root agent.
+- Terra: use as the owner of a large, independent workstream that requires greater technical capability, collaboration, or explicit task decomposition. Use `max` by default. Boundary: prioritize workstreams that exceed the scope of routine Luna work.
+- Sol: use as a senior critic for high-ambiguity or high-risk decisions, such as architecture, security, payments, incidents, and release risk. Assess competing hypotheses, identify the evidence that distinguishes them, and recommend a decision. Use `high` or `max`. Boundary: reserve this model for complex judgment, not simple research, deterministic workflows, or ordinary isolated implementation.
 
 ## Deferred work — DEFERRED.md
 
