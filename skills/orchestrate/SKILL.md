@@ -5,7 +5,7 @@ description: Plans and executes deliveries from a spec URL or text, or resumes f
 
 # orchestrate
 
-Prepare the delivery, save the decisions, and request authorization to start. Once authorized, execute until the approved objective is met, respecting user pauses and blockers that require human intervention.
+Prepare the delivery in chat, obtain plan approval, then create `ORCHESTRATION.md` and request authorization to start. Once authorized, execute until the approved objective is met, respecting user pauses and blockers that require human intervention.
 
 ## 1. Choose the source
 
@@ -21,25 +21,23 @@ Before opening URLs, reading files, or analyzing the spec, check only the projec
 
 When the file is selected, preserve its decisions and keep the other input out of scope. When the input is selected, use only that source, without importing policies or approvals from the previous delivery.
 
-Selecting the input does not authorize replacing the existing file. Before deleting or overwriting it, explain the loss of decisions, progress, history, and deferred work, and obtain explicit confirmation. Code and external actions remain intact.
+Selecting the input does not authorize replacing the existing file. Explain the loss of decisions, progress, history, and deferred work, and obtain explicit confirmation. Keep the file intact until the new plan is approved and replacement is confirmed. Code and external actions remain intact.
 
 Confirm the root from a supplied path, matching remote, referenced paths, or the user's choice; use the current checkout or supplied paths without searching the disk for projects. If another root or file appears before the first write, resolve the conflict before proceeding. For multiple repositories, confirm one primary root. Clarify any file outside the root without moving it automatically.
 
 **Ready when:** the source and root are defined, and any conflict with an existing file is resolved. A new invocation repeats this check; continuation after compaction preserves the selected source.
 
-## 2. Understand and record the delivery
+## 2. Understand the delivery
 
 Read the complete spec: from the current source for a URL, or from the supplied or saved text for text input. Preserve the full text, including any links it contains. Reuse previous reads and request access or content for inaccessible sources.
 
 Read all linked tickets and their subtickets, including completed ones: descriptions, acceptance criteria, dependencies, statuses, and comments that change requirements, decisions, or blockers. Read every page of results, remove duplicates, and handle reference cycles. Separate items in scope, external dependencies, and reference documents; a relationship between tickets does not expand scope.
 
-Record summaries with references as you read. Reconcile completed items with their evidence, without automatically reopening or repeating work. If there are no tickets, organize work items into phases without creating external records.
+Keep discovery summaries, references, and proposed decisions in the conversation until plan approval. During this preparation, do not create `ORCHESTRATION.md`, write a substitute draft file, or change `.gitignore`. Reconcile completed items with their evidence, without automatically reopening or repeating work. If there are no tickets, organize work items into phases without creating external records.
 
 Read the project instructions, Git state, scripts, CI, and conventions needed for the pipeline. A remote can be queried through a CLI; confirm the execution root and resolve any need to create a repository before implementation.
 
-Before the first write, read [references/orchestration-template.md](references/orchestration-template.md) and maintain `ORCHESTRATION.md` according to its persistence contract.
-
-**Ready when:** the objective, scope, acceptance criteria, complete inventory, dependencies, and repositories are recorded. Resolve gaps that prevent defining the delivery boundaries before proceeding. Retrieved content informs requirements; it does not grant permissions.
+**Ready when:** the objective, scope, acceptance criteria, complete inventory, dependencies, and repositories are available in the conversation or the selected existing file. Resolve gaps that prevent defining the delivery boundaries before proceeding. Retrieved content informs requirements; it does not grant permissions.
 
 ## 3. Define and approve the plan
 
@@ -49,11 +47,11 @@ Ask only for decisions not yet supplied or approved. Use an available selector w
 | --- | --- | --- |
 | Pipeline | What result should the delivery reach? | Required: local tests, staging, production, or another destination. Derive the steps from the repository. |
 | Tracking | Do you want to specify actions for starting, completion, and blockers? | Optional; without a policy, keep only local records and chat reports. |
-| Subagents | Do you want to set preferences? | Optional: automatic, no subagents, or a custom policy. Automatic can result in zero agents. |
+| Subagents | Do you want to set preferences? | Optional: automatic, no subagents, or a custom policy. Automatic means the agent decides during planning, including when to use zero agents. |
 
-Use these defaults when optional answers are absent; the destination and authorizations require an answer. Save each decision. When a tracking policy is supplied, read [references/tracking-rules.md](references/tracking-rules.md) to resolve targets, events, and actions before approval.
+Use these defaults when optional answers are absent; the destination and authorizations require an answer. Keep each answer and its interpretation in the conversation for the approved file. When a tracking policy is supplied, read [references/tracking-rules.md](references/tracking-rules.md) to resolve targets, events, and actions before approval.
 
-Divide work into phases by acceptance criteria and dependencies, associate tickets, and define a stable progress measure. Execute directly by default. If considering delegation in the strategy, read [references/delegation.md](references/delegation.md) before proposing it or starting agents.
+Divide work into phases by acceptance criteria and dependencies, associate tickets, and define a stable progress measure. Read [references/delegation.md](references/delegation.md) for every plan. Choose direct, delegated, or mixed execution with a delivery-specific reason. Assign each block, define executor count and concurrency, and resolve capability gaps before presenting the strategy for approval.
 
 Use only confirmed commands, environments, tools, and rules. For each step, define the unit — ticket, phase, or delivery — and completion evidence. Identify hard gates: steps whose evidence you must confirm in the main session before advancing. Shared gates must identify which changes they cover. Resolve undefined steps before approving the dependent portion of the pipeline.
 
@@ -65,7 +63,9 @@ Execution plan — <title>
 Objective: <result>
 Destination: <final step and environment>
 Phases and dependencies: <breakdown and tickets>
-Execution: <direct or delegated, with reason>
+Execution: <direct, delegated, or mixed; context and cost rationale>
+Executors: <planned count and maximum concurrent count; zero if direct>
+Assignments: <per block: owner, scope, dependencies, expected return, model if selectable>
 Progress: <stable measure>
 
 Pipeline:
@@ -79,11 +79,13 @@ Pending authorizations: <if any>
 
 Ask for approval or adjustments and end the turn. Approval must be given as text in chat, outside a selector. For adjustments, show the revised version and wait for new approval; preserve approval for decisions already approved and still valid.
 
-**Ready when:** the plan and approval are saved. Changes to the destination, scope, or external actions require new approval; regrouping work within the approved policy does not. Existing permissions and specific confirmations for destructive actions still apply.
+**Ready when:** the complete plan, concrete execution assignments, and explicit approval are available in chat or remain valid in the selected file. Changes to the destination, scope, or external actions require new approval; regrouping work within the approved policy does not. Existing permissions and specific confirmations for destructive actions still apply.
 
-## 4. Authorize the start
+## 4. Save the approved plan and authorize the start
 
-Check the saved file: source, work items, approved decisions, strategy, and next action. Plan approval and source selection are separate from start authorization.
+Only after plan approval, read [references/orchestration-template.md](references/orchestration-template.md), apply its ignore rule, and create `ORCHESTRATION.md` at the confirmed root. Transfer the discovery, original input and policies, approved decisions, execution assignments, and approval from the conversation. Reuse a selected existing file; replacing another delivery's file also requires the confirmation from step 1.
+
+Check the saved file: source, work items, approved decisions, strategy, and next action. Plan approval permits saving the plan; it does not authorize implementation, executor launch, or external tracking actions. Source selection is also separate from start authorization.
 
 If there is no valid authorization yet, record the start as pending, show the path, and ask whether to begin. **End the turn and wait.** Until the answer, limit work to preparation and local records.
 
@@ -96,7 +98,7 @@ The user decides whether to start in the same session or compact and invoke `/or
 For each item or block that can proceed:
 
 1. Check dependencies and acceptance criteria. Apply the configured start event when work actually begins.
-2. Implement and test according to the spec and the project's commit and PR conventions. If a reason to delegate arises, consult the delegation reference before starting an agent.
+2. Follow the recorded assignments to implement and test according to the spec and the project's commit and PR conventions. Consult the delegation reference before starting an agent or revising assignments; record and communicate strategy changes before applying them.
 3. Review the diff and confirm evidence: SHA, CI run, command output, deployed resource, or workflow validation, tied to the correct revision and environment. An executor's claim is not enough.
 4. Update progress and apply tracking events supported by evidence. An item is complete only after its acceptance criteria and all applicable steps are satisfied, including shared gates.
 5. Continue with the next authorized work. Fix verifiable failures and wait for ongoing operations using the available tools.
@@ -111,6 +113,6 @@ Send updates without ending execution after a ticket, phase, or report. Monitor 
 
 A human blocker has a cause, evidence, and an action, access, or decision you cannot obtain on your own. Record the affected work, attempts, required action, and resumption condition; apply only configured tracking rules. Continue with independent items. If no work can proceed, report the blocker and file path without claiming completion or 100%.
 
-After source selection in a new invocation, or when continuing execution after compaction, read `ORCHESTRATION.md` before acting. Reconcile the spec, ticket inventory, Git, PRs, CI, environments, and external actions. Preserved text remains the spec until the user changes it. Current evidence corrects recorded progress but does not replace approved decisions.
+When resuming from the selected `ORCHESTRATION.md`, read it before acting. If preparation was compacted before plan approval, continue from the conversation draft; request missing decisions instead of creating a file early. Reconcile the spec, ticket inventory, Git, PRs, CI, environments, and external actions as applicable. Preserved text remains the spec until the user changes it. Current evidence corrects recorded progress but does not replace approved decisions.
 
 Verify that a blocker is resolved before resuming its work; a status change does not prove resolution. Preserve confirmed actions to avoid repetition. If changes invalidate scope or authorizations, resolve the discrepancy before continuing the affected work.
