@@ -6,6 +6,7 @@ My personal collection of [Agent Skills](https://agentskills.io) — self-contai
 
 | Skill | Description |
 | --- | --- |
+| [orchestrate](skills/orchestrate/SKILL.md) | Plans and executes a delivery from a spec, with a persistent plan, explicit start approval, and optional delegation. |
 | [spec-orchestrator-handoff](skills/spec-orchestrator-handoff/SKILL.md) | Writes the opening handoff for the orchestrator session of a layered delivery from a spec (URL, local file path, or pasted text) — one file in the system temp directory, the path printed as the only output. |
 
 ## Installation
