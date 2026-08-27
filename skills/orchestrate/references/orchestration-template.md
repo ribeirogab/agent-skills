@@ -1,28 +1,28 @@
 # ORCHESTRATION.md
 
-Leia antes da primeira gravação. Mantenha um único arquivo com esse nome na raiz confirmada do projeto; para vários repositórios, registre os demais caminhos nele.
+Read before the first write. Keep a single file with this name at the confirmed project root; for multiple repositories, record the other paths in it.
 
-## Persistência
+## Persistence
 
-Antes de criar ou atualizar o arquivo, garanta `/ORCHESTRATION.md` no `.gitignore` da raiz, sem duplicar a entrada ou alterar outras regras. Confira que o arquivo está ignorado e não é rastreado; mantenha-o fora dos commits. Se já for rastreado, peça autorização específica para removê-lo do índice; o ignore sozinho não resolve. Sem Git inicializado, mantenha a regra e verifique-a após criar o repositório.
+Before creating or updating the file, ensure `/ORCHESTRATION.md` is in the root `.gitignore`, without duplicating the entry or changing other rules. Verify that the file is ignored and untracked; keep it out of commits. If it is already tracked, request specific authorization to remove it from the index; the ignore rule alone is insufficient. If Git is not initialized, keep the rule and verify it after creating the repository.
 
-Atualize o arquivo após descoberta, decisões, autorização de início, etapas, ações externas, bloqueios e antes de devolver o controle. Registre pausas e cancelamentos. Preserve políticas e aprovações; use referências para logs e provas, sem gravar credenciais.
+Update the file after discovery, decisions, start authorization, steps, external actions, blockers, and before returning control. Record pauses and cancellations. Preserve policies and approvals; use references for logs and evidence without storing credentials.
 
-## Estrutura
+## Structure
 
-Use `# Orchestration` como título e as seções abaixo como títulos de segundo nível. Preencha com fatos e marque propostas como pendentes.
+Use `# Orchestration` as the title and the sections below as second-level headings. Fill them with facts and mark proposals as pending.
 
-| Seção | Conteúdo |
+| Section | Content |
 | --- | --- |
-| Spec | URL ou texto integral; objetivo, escopo, exclusões, aceite, raiz, repositórios e versões das fontes. Inventário de tickets e subtickets com links, relações e dependências; referências externas e lacunas separadas. Sem tickets, registre os itens de trabalho. |
-| Approved decisions | Subdivida em Pipeline, Tracking rules, Subagents e Start authorization. Registre definições efetivas, políticas originais, interpretações aprovadas, limites, capacidades confirmadas, datas e respostas do usuário. Separe aprovação do plano e autorização de início. |
-| Execution strategy | Fases, dependências, execução direta ou blocos delegados, motivos e critério estável de progresso. Inclua referências dos agentes e confira sua disponibilidade ao retomar. |
-| Progress | Por item: status externo, etapa, resultado, revisão ou recurso e prova. Mantenha o status externo separado do avanço técnico. |
-| Blockers | Trabalho afetado, causa, provas, tentativas, ação humana, condição de retomada, acompanhamento e trabalho independente viável. |
-| Next action | Próxima ação concreta, operações em andamento, verificações e autorizações pendentes, com data. Antes do início, registre a espera por autorização; depois, a próxima etapa viável. |
-| Decision history | Data, mudança, motivo e aprovação. Preserve decisões anteriores; as definições vigentes ficam em Approved decisions. |
-| Deferred work | Descobertas fora do escopo: o que são, onde estão e por que ficaram de fora. Registre ao descobrir; mantenha aceite e falhas do pipeline em Progress ou Blockers. |
+| Spec | URL or full text; objective, scope, exclusions, acceptance criteria, root, repositories, and source versions. Inventory of tickets and subtickets with links, relationships, and dependencies; separate external references and gaps. Without tickets, record work items. |
+| Approved decisions | Divide into Pipeline, Tracking rules, Subagents, and Start authorization. Record effective decisions, original policies, approved interpretations, boundaries, confirmed capabilities, dates, and user answers. Separate plan approval from start authorization. |
+| Execution strategy | Phases, dependencies, direct execution or delegated blocks, reasons, and a stable progress measure. Include agent references and check their availability when resuming. |
+| Progress | Per item: external status, step, result, revision or resource, and evidence. Keep external status separate from technical progress. |
+| Blockers | Affected work, cause, evidence, attempts, human action, resumption condition, tracking, and independent work that can proceed. |
+| Next action | Next concrete action, ongoing operations, pending checks and authorizations, with a date. Before starting, record the wait for authorization; afterward, the next step that can proceed. |
+| Decision history | Date, change, reason, and approval. Preserve previous decisions; keep current decisions in Approved decisions. |
+| Deferred work | Findings outside scope: what they are, where they are, and why they were excluded. Record them when discovered; keep acceptance criteria and pipeline failures in Progress or Blockers. |
 
-Em `Progress / Tracking actions`, registre intenções e resultados externos: recurso, evento e evidência, ação, resultado, referência externa e próxima ação. Diferencie pendente, confirmado e incerto.
+In `Progress / Tracking actions`, record external intents and results: resource, event and evidence, action, result, external reference, and next action. Distinguish pending, confirmed, and uncertain states.
 
-`Deferred work` fica apenas neste arquivo, fora do percentual e sem ampliar o escopo. Publique a lista externamente somente por regra confirmada. A exclusão do arquivo também elimina essas pendências.
+Keep `Deferred work` only in this file, excluded from the progress percentage and without expanding scope. Publish the list externally only under a confirmed rule. Deleting the file also removes these deferred items.

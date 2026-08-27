@@ -1,27 +1,27 @@
-# Delegação por contexto e custo
+# Delegation by context and cost
 
-Leia ao considerar delegação na estratégia ou antes de abrir um subagente durante a execução.
+Read when considering delegation in the strategy or before starting a subagent during execution.
 
-## Decidir
+## Decide
 
-Execute diretamente por padrão. Com `sem subagentes`, ou sem essa capacidade no ambiente, mantenha o trabalho na sessão principal. Informe limitações quando afetarem a estratégia.
+Execute directly by default. With `no subagents`, or when the environment lacks this capability, keep work in the main session. Report limitations when they affect the strategy.
 
-Delegue quando preservar contexto ou reduzir custo total compensar preparar instruções, transferir contexto, acompanhar, revisar e corrigir. A política de modelos orienta a escolha, mas não obriga delegação. Modelo mais barato reduz custo por token; delegar pode aumentar a quantidade de tokens. Use opções confirmadas, sem inventar economia.
+Delegate when preserving context or reducing total cost outweighs preparing instructions, transferring context, monitoring, reviewing, and correcting. The model policy guides selection but does not require delegation. A cheaper model reduces cost per token; delegation can increase token count. Use confirmed options without inventing savings.
 
-| Trabalho | Preferência |
+| Work | Preference |
 | --- | --- |
-| Ajuste pequeno já compreendido, arquitetura, regra ambígua ou contexto caro de transferir | Sessão principal |
-| Implementação repetitiva, com padrão e aceite claros | Bloco delegado a um modelo mais barato capaz |
-| Leitura extensa ou investigação delimitada com síntese curta | Delegação para preservar contexto |
+| Small change already understood, architecture, ambiguous rule, or context costly to transfer | Main session |
+| Repetitive implementation with a clear pattern and acceptance criteria | Block delegated to a capable, cheaper model |
+| Extensive reading or bounded investigation with a short summary | Delegation to preserve context |
 
-Informe o motivo antes de abrir cada agente. Sem opção de modelo mais barato, avalie apenas o benefício de contexto.
+State the reason before starting each agent. Without a cheaper model option, assess only the context benefit.
 
-## Atribuir e revisar
+## Assign and review
 
-Agrupe trabalho relacionado, inclusive várias fases, sem quantidade fixa de tarefas por agente. Reutilize o executor para correções e continuações do mesmo contexto. Paralelize apenas trabalho independente cujo benefício justifique o custo.
+Group related work, including multiple phases, without a fixed number of tasks per agent. Reuse the executor for corrections and continuations in the same context. Parallelize only independent work whose benefit justifies the cost.
 
-Forneça requisitos, limites, dependências, interfaces, aceite, verificações e referências do bloco, sem copiar a conversa inteira. Receba alterações, diff ou commits, provas, desvios e pendências; consulte logs completos quando necessário.
+Provide the block's requirements, boundaries, dependencies, interfaces, acceptance criteria, checks, and references without copying the entire conversation. Collect changes, diffs or commits, evidence, deviations, and pending work; consult full logs when needed.
 
-Os executores fazem o trabalho recebido, sem abrir outros agentes. A sessão principal decide, revisa, opera os hard gates e controla as escritas de acompanhamento. Devolva correções ao mesmo executor quando o contexto continuar útil.
+Executors perform their assigned work without starting other agents. The main session makes decisions, reviews, operates hard gates, and controls tracking writes. Return corrections to the same executor while its context remains useful.
 
-A revisão fica na sessão principal, sem revisor ou crítico adicional automático. Se um gate exigir revisão independente incompatível com as preferências ou capacidades disponíveis, resolva o conflito com o usuário antes de avançar.
+Keep review in the main session, without automatically adding a reviewer or critic. If a gate requires independent review that conflicts with preferences or available capabilities, resolve the conflict with the user before proceeding.

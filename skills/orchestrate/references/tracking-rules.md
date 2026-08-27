@@ -1,47 +1,47 @@
-# Regras de acompanhamento
+# Tracking rules
 
-Leia quando houver política de acompanhamento a configurar ou ações configuradas a executar ou reconciliar. Sem política aprovada, mantenha apenas registros locais e relatórios no chat.
+Read when a tracking policy needs configuration, or configured actions need execution or reconciliation. Without an approved policy, keep only local records and chat reports.
 
-## Configurar
+## Configure
 
-Preserve a política original em `Approved decisions / Tracking rules`. Para cada regra, defina evento, condição e prova, serviço e recursos afetados, ação, conteúdo permitido e forma de confirmar o resultado.
+Preserve the original policy in `Approved decisions / Tracking rules`. For each rule, define the event, condition and evidence, service and affected resources, action, allowed content, and method to confirm the result.
 
-Consulte o serviço para resolver contas, times, projetos, campos e status para identificadores reais. Peça esclarecimento para nomes ausentes ou ambíguos, sem criar valores para acomodar a política. Uma regra de subticket não se estende ao pai; sua conclusão exige regra explícita e cumprimento dos critérios de todos os itens necessários.
+Query the service to resolve accounts, teams, projects, fields, and statuses to real identifiers. Ask for clarification when names are missing or ambiguous, without creating values to accommodate the policy. A subticket rule does not extend to its parent; completing the parent requires an explicit rule and satisfaction of the criteria for all required items.
 
-Se um status representar uma etapa intermediária, associe-o a esse evento e mantenha separado o avanço técnico. O nome do status não altera o destino aprovado.
+If a status represents an intermediate step, associate it with that event and keep technical progress separate. The status name does not change the approved destination.
 
-**Pronto quando:** mapeamento, alvos e alcance das escritas estão aprovados no plano. A aplicação depende também da autorização de início. A espera entre preparação e execução não gera eventos de bloqueio ou conclusão.
+**Ready when:** mappings, targets, and write scope are approved in the plan. Applying them also requires start authorization. Waiting between preparation and execution does not generate blocker or completion events.
 
-## Aplicar e confirmar
+## Apply and confirm
 
-A sessão principal executa as ações, usando as evidências dos executores.
+The main session performs the actions using evidence from executors.
 
-1. Confirme o evento com provas e leia o recurso atual. Reconcilie mudanças humanas antes de sobrescrever decisões.
-2. Consulte as ações anteriores e registre a intenção em `Progress / Tracking actions`: recurso, evento e evidência, ação esperada.
-3. Execute somente a ação aprovada. Confirme valores já corretos sem reescrevê-los. Para comentários, procure a ação anterior pelo ID ou pelo conteúdo e evento; use idempotência quando disponível.
-4. Consulte o resultado e registre sua referência. Diante de resposta incerta, confira a fonte antes de repetir.
+1. Confirm the event with evidence and read the current resource. Reconcile human changes before overwriting decisions.
+2. Check previous actions and record the intent in `Progress / Tracking actions`: resource, event and evidence, expected action.
+3. Perform only the approved action. Confirm values that are already correct without rewriting them. For comments, find the previous action by ID or by content and event; use idempotency when available.
+4. Query the result and record its reference. If the response is uncertain, check the source before retrying.
 
-**Pronto quando:** cada ação tem resultado confirmado. Status e comentário são operações separadas; retome apenas a parte pendente. Uma falha de integração mantém pendência de acompanhamento, sem invalidar provas técnicas. Continue o trabalho independente.
+**Ready when:** each action has a confirmed result. Status and comment updates are separate operations; resume only the pending part. An integration failure leaves tracking pending without invalidating technical evidence. Continue independent work.
 
-## Bloqueio humano
+## Human blocker
 
-Aplique a regra apenas aos recursos afetados. O comentário deve conter bloqueio, evidências, tentativas, ação humana necessária e condição de retomada, sem credenciais ou logs sensíveis.
+Apply the rule only to affected resources. The comment must include the blocker, evidence, attempts, required human action, and resumption condition, without credentials or sensitive logs.
 
-Após verificar a solução, aplique a transição de retomada configurada, considerando o estado atual. Preserve mudanças humanas em vez de restaurar cegamente um status antigo.
+After verifying the resolution, apply the configured resumption transition, considering the current state. Preserve human changes instead of blindly restoring an old status.
 
-Alterar status ou comentar não desperta uma sessão encerrada. A retomada depende de nova entrada ou invocação; monitoramento exige solicitação e configuração próprias.
+Changing a status or posting a comment does not wake an ended session. Resumption requires new input or invocation; monitoring requires a separate request and setup.
 
-## Exemplo opcional: Linear
+## Optional example: Linear
 
-Esta política é um exemplo de entrada do usuário, não um padrão:
+This policy is an example of user input, not a default:
 
 ```text
-Para os subtickets desta spec:
-- Ao iniciar, mude para In Progress.
-- Ao cumprir o aceite e o pipeline aplicáveis, mude para Done e comente as provas.
-- Em bloqueio que exija humano, mude para Needs Human e comente causa, tentativas e ação necessária.
-- Após verificar a solução e retomar, mude para In Progress.
-- Preserve o ticket pai e os demais campos.
+For this spec's subtickets:
+- When starting, change to In Progress.
+- After satisfying the applicable acceptance criteria and pipeline, change to Done and comment with evidence.
+- For a blocker requiring a human, change to Needs Human and comment with the cause, attempts, and required action.
+- After verifying the resolution and resuming, change to In Progress.
+- Preserve the parent ticket and all other fields.
 ```
 
-Antes de ativar, confirme os subtickets, o time, os IDs dos status, as permissões e o mapeamento aprovado. Se um status não existir, peça o nome correto. A prova de conclusão deve corresponder ao destino aprovado, seja staging, produção ou outro.
+Before enabling, confirm the subtickets, team, status IDs, permissions, and approved mapping. If a status does not exist, ask for the correct name. Completion evidence must match the approved destination, whether staging, production, or another destination.
