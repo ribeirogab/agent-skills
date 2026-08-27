@@ -41,15 +41,17 @@ Read the project instructions, Git state, scripts, CI, and conventions needed fo
 
 ## 3. Define and approve the plan
 
-Ask only for decisions not yet supplied or approved. Use an available selector when appropriate, or short questions in chat. Accept policies as text or files and preserve the original separately from your interpretation.
+Obtain an explicit user choice for each of the three decisions below. Ask every unanswered question; reuse choices already supplied by the user or still valid in the selected approved file. Customization is optional, but choosing whether to customize is required. Use an available selector when appropriate, or short questions in chat. Accept policies as text or files and preserve the original separately from your interpretation.
 
 | Decision | Question | Rule |
 | --- | --- | --- |
 | Pipeline | What result should the delivery reach? | Required: local tests, staging, production, or another destination. Derive the steps from the repository. |
-| Tracking | Do you want to specify actions for starting, completion, and blockers? | Optional; without a policy, keep only local records and chat reports. |
-| Subagents | Do you want to set preferences? | Optional: automatic, no subagents, or a custom policy. Automatic means the agent decides during planning, including when to use zero agents. |
+| Tracking | Do you want actions for starting, completion, and blockers, or local records and chat reports only? | Choose a tracking policy or explicitly choose no external tracking. |
+| Subagents | Do you want automatic delegation decisions, no subagents, or a custom policy? | Choose one. Automatic means the agent decides during planning, including when to use zero agents. |
 
-Use these defaults when optional answers are absent; the destination and authorizations require an answer. Keep each answer and its interpretation in the conversation for the approved file. When a tracking policy is supplied, read [references/tracking-rules.md](references/tracking-rules.md) to resolve targets, events, and actions before approval.
+Use local-only tracking or automatic delegation only when the user explicitly selects them or accepts those explained defaults. Silence, skipped questions, and missing answers leave decisions pending. If any choice is missing, ask for it, end the turn, and wait before presenting the plan for approval.
+
+Keep each answer and its interpretation in the conversation for the approved file. When a tracking policy is supplied, read [references/tracking-rules.md](references/tracking-rules.md) to resolve targets, events, and actions before approval.
 
 Divide work into phases by acceptance criteria and dependencies, associate tickets, and define a stable progress measure. Read [references/delegation.md](references/delegation.md) for every plan. Choose direct, delegated, or mixed execution with a delivery-specific reason. Assign each block, define executor count and concurrency, and resolve capability gaps before presenting the strategy for approval.
 
@@ -79,7 +81,7 @@ Pending authorizations: <if any>
 
 Ask for approval or adjustments and end the turn. Approval must be given as text in chat, outside a selector. For adjustments, show the revised version and wait for new approval; preserve approval for decisions already approved and still valid.
 
-**Ready when:** the complete plan, concrete execution assignments, and explicit approval are available in chat or remain valid in the selected file. Changes to the destination, scope, or external actions require new approval; regrouping work within the approved policy does not. Existing permissions and specific confirmations for destructive actions still apply.
+**Ready when:** all three user choices, the complete plan, concrete execution assignments, and explicit approval are available in chat or remain valid in the selected file. Changes to the destination, scope, or external actions require new approval; regrouping work within the approved policy does not. Existing permissions and specific confirmations for destructive actions still apply.
 
 ## 4. Save the approved plan and authorize the start
 
