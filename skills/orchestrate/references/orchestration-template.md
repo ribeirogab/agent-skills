@@ -8,6 +8,8 @@ Before creating or updating the file, ensure `/ORCHESTRATION.md` is in the root 
 
 The initial file contains the approved plan and its preparation records; preparation drafts remain in the conversation until approval. Once the file exists for the approved delivery, update it after new findings, decisions, strategy changes, start authorization, steps, external actions, blockers, and before returning control. Record pauses and cancellations. Preserve policies and approvals; use references for logs and evidence without storing credentials.
 
+`ORCHESTRATION.md` remains the authoritative delivery record. `CHECKPOINT.md` is a short snapshot for resumption, created only on a checkpoint request through [checkpoint.md](checkpoint.md). Keep the full plan, approvals, history, and deferred work here; the checkpoint references them. Record the checkpoint path, identifier, pause state, and later resumption in `Next action` and `Decision history`.
+
 ## Structure
 
 Use `# Orchestration` as the title and the sections below as second-level headings. Fill them with facts and mark proposals as pending.

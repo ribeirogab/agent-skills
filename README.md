@@ -6,7 +6,7 @@ My personal collection of [Agent Skills](https://agentskills.io) — self-contai
 
 | Skill | Description |
 | --- | --- |
-| [orchestrate](skills/orchestrate/SKILL.md) | Plans and executes a delivery from a spec, with a persistent plan, explicit start approval, and optional delegation. |
+| [orchestrate](skills/orchestrate/SKILL.md) | Plans and executes a delivery from a spec, with explicit start approval and optional delegation. Pauses with `/orchestrate checkpoint` and resumes from a `CHECKPOINT.md` path. |
 
 ## Installation
 

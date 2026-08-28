@@ -1,15 +1,27 @@
 ---
 name: orchestrate
-description: Plans and executes deliveries from a spec URL or text, or resumes from ORCHESTRATION.md. Confirms the plan and start authorization before executing through the approved destination.
+description: Plans and executes deliveries from a spec, pauses with checkpoint, and resumes from CHECKPOINT.md or ORCHESTRATION.md. Confirms the plan and initial start authorization before executing through the approved destination.
 ---
 
 # orchestrate
 
 Prepare the delivery in chat, obtain plan approval, then create `ORCHESTRATION.md` and request authorization to start. Once authorized, execute until the approved objective is met, respecting user pauses and blockers that require human intervention.
 
+## Invocation
+
+Resolve the mode before source selection. Accept absolute paths or paths relative to the current directory.
+
+| Input | Action |
+| --- | --- |
+| `/orchestrate checkpoint` | Pause the active delivery and save `CHECKPOINT.md`. Read [references/checkpoint.md](references/checkpoint.md) and follow **Save a checkpoint**, then end the turn. |
+| `/orchestrate <path/CHECKPOINT.md>` | The path alone requests resumption of the checkpoint pause. Read [references/checkpoint.md](references/checkpoint.md) and follow **Resume from a checkpoint**; no additional resume phrase is required. |
+| URL, spec text, `ORCHESTRATION.md` path, or no argument | Follow **1. Choose the source**. |
+
+The exact `checkpoint` argument is a command, not spec text. A checkpoint path selects its linked orchestration file; the source-choice question in step 1 does not apply to these two modes. A missing or invalid checkpoint path requires correction, not fallback to a new delivery.
+
 ## 1. Choose the source
 
-Input: `/orchestrate <url>`, `/orchestrate <text>`, or `/orchestrate <path/ORCHESTRATION.md>`. Accept absolute paths or paths relative to the current directory.
+Input: `/orchestrate <url>`, `/orchestrate <text>`, or `/orchestrate <path/ORCHESTRATION.md>`.
 
 Before opening URLs, reading files, or analyzing the spec, check only the project location and whether `ORCHESTRATION.md` exists.
 
@@ -107,7 +119,7 @@ For each item or block that can proceed:
 
 Confirm and operate hard gates in the main session. Run one deployment at a time for the same destination. Respect permissions and real costs for tests, databases, and production environments, without going beyond the approved destination.
 
-Send updates without ending execution after a ticket, phase, or report. Monitor ongoing CI and subagents instead of asking the user to continue the work.
+Send updates without ending execution after a ticket, phase, or report. Monitor ongoing CI and subagents instead of asking the user to continue the work. A checkpoint request interrupts this loop through the checkpoint mode; saving it is a pause, not delivery completion.
 
 **Complete when:** all items satisfy their acceptance criteria, the pipeline has reached the destination, and required tracking actions are confirmed. Report the result, evidence, item statuses, tracking results, file path, and `Deferred work` list. Tracking failures remain pending even when the code is delivered.
 
