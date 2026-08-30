@@ -14,7 +14,7 @@ Resolve the mode before source selection. Accept absolute paths or paths relativ
 | Input | Action |
 | --- | --- |
 | `/orchestrate checkpoint` | Pause the active delivery and save `CHECKPOINT.md`. Read [references/checkpoint.md](references/checkpoint.md) and follow **Save a checkpoint**, then end the turn. |
-| `/orchestrate <path/CHECKPOINT.md>` | The path alone requests resumption of the checkpoint pause. Read [references/checkpoint.md](references/checkpoint.md) and follow **Resume from a checkpoint**; no additional resume phrase is required. |
+| `/orchestrate <path/CHECKPOINT.md>` | The path requests a resumption review. Read [references/checkpoint.md](references/checkpoint.md), follow **Resume from a checkpoint**, present the stopping point and ordered next steps, and wait for explicit confirmation in plain chat before execution. |
 | URL, spec text, `ORCHESTRATION.md` path, or no argument | Follow **1. Choose the source**. |
 
 The exact `checkpoint` argument is a command, not spec text. A checkpoint path selects its linked orchestration file; the source-choice question in step 1 does not apply to these two modes. A missing or invalid checkpoint path requires correction, not fallback to a new delivery.
