@@ -41,4 +41,4 @@ Keep review in the main session, without automatically adding a reviewer or crit
 
 ## Revise the strategy
 
-Use the recorded assignments as the starting point. When discoveries change context needs or dependencies, update `Execution strategy` and `Decision history` with the new assignments and reason, and communicate the change before applying it. Stay within the approved policy and permissions; changes outside them require approval. On resumption, verify executor availability and record any replacement before dispatching work.
+Use the recorded assignments as the starting point. When discoveries change context needs or dependencies, update `Execution strategy` and `Decision history` with the new assignments and reason before applying them. Stay within the approved policy and permissions without messaging the user; changes outside them require approval in chat before execution. On resumption, verify executor availability and record any replacement before dispatching work.

@@ -12,7 +12,7 @@ The initial file contains the approved plan and its preparation records; prepara
 
 ## Structure
 
-Use `# Orchestration` as the title and the sections below as second-level headings. Fill them with facts and mark proposals as pending.
+Use `# Orchestration` as the title and the sections below as second-level headings. Fill them with facts and evidence, and mark proposals as pending. Write each entry as what happened or what comes next, with its evidence reference.
 
 | Section | Content |
 | --- | --- |
