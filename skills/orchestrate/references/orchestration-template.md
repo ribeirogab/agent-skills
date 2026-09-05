@@ -16,8 +16,9 @@ Use `# Orchestration` as the title and the sections below as second-level headin
 
 | Section | Content |
 | --- | --- |
+| Original user instructions | Complete user answers and supplied policies, preserved verbatim once per source entry under the rules below. |
 | Spec | URL or full text; objective, scope, exclusions, acceptance criteria, root, repositories, and source versions. Inventory of tickets and subtickets with links, relationships, and dependencies; separate external references and gaps. Without tickets, record work items. |
-| Approved decisions | Divide into Pipeline, Tracking rules, Subagents, and Start authorization. Record effective decisions, original policies, approved interpretations, boundaries, confirmed capabilities, dates, and user answers. Separate plan approval from start authorization. |
+| Approved decisions | Divide into Pipeline, Tracking rules, Subagents, and Start authorization. Record effective decisions, approved interpretations, boundaries, confirmed capabilities, dates, and references to the entries in Original user instructions. Separate plan approval from start authorization. |
 | Execution strategy | Phases and a stable progress measure. Record the concrete assignments defined in the delegation reference: mode, context and cost rationale, block owners, scope, boundaries, dependencies, expected returns, executor count, concurrency, reuse, and confirmed model choices or capability limits. Use planned labels until launch, then add agent references and verify availability on resumption. |
 | Progress | Per item: external status, step, result, revision or resource, and evidence. Keep external status separate from technical progress. |
 | Blockers | Affected work, cause, evidence, attempts, human action, resumption condition, tracking, and independent work that can proceed. |
@@ -28,3 +29,16 @@ Use `# Orchestration` as the title and the sections below as second-level headin
 In `Progress / Tracking actions`, record external intents and results: resource, event and evidence, action, result, external reference, and next action. Distinguish pending, confirmed, and uncertain states.
 
 Keep `Deferred work` only in this file, excluded from the progress percentage and without expanding scope. Publish the list externally only under a confirmed rule. Deleting the file also removes these deferred items.
+
+## Original instructions and verification
+
+After plan approval, copy each complete user answer or supplied policy into `Original user instructions` exactly as received, including language, wording, punctuation, Markdown, links, spacing, and line breaks. Use a fenced block with a delimiter longer than any matching delimiter in the source. Keep entry IDs, dates, source references, and interpretation outside the block. For file policies, embed the original content, not only its path. Store an answer that covers several decisions once; reference its entry from each relevant decision section.
+
+Preserve existing original entries on updates. Append user amendments as new entries and record which requirements they supersede in `Decision history`; keep the effective interpretation in `Approved decisions`. If exact source text is unavailable, request it instead of reconstructing it from a summary or claiming fidelity.
+
+Before execution and after policy or plan changes, complete and record both checks in `Approved decisions`:
+
+1. **Fidelity:** compare each saved original block with its source character for character, excluding only the enclosing fence and metadata. Correct any difference. Use a deterministic comparison when the source is available as a file; otherwise compare against the original conversation text. Record the source entry, comparison method, and result.
+2. **Coverage:** map every requirement in each effective original entry to its operational decision, pipeline step, assignment, authorization boundary, or gate. Include conditions, exceptions, repetition rules, and stopping criteria. Record these mappings with source entry and clause references, and check for omissions or contradictions. Correct interpretation errors; resolve conflicts that require a user decision before executing the affected work. A summary or general claim of compliance does not replace this mapping.
+
+These checks preserve the user's instructions without granting additional permissions or turning proposed policies into approved decisions.
