@@ -4,7 +4,7 @@ Read when a tracking policy needs configuration, or configured actions need exec
 
 ## Configure
 
-Keep the original policy and proposed interpretation in the conversation during planning; after plan approval, save them in `Approved decisions / Tracking rules`. For each rule, define the event, condition and evidence, service and affected resources, action, allowed content, and method to confirm the result.
+Keep the original policy and proposed interpretation in the conversation during planning; after plan approval, preserve the complete original in `Original user instructions` according to the orchestration template and save the approved interpretation with its source entry reference in `Approved decisions / Tracking rules`. For each rule, define the event, condition and evidence, service and affected resources, action, allowed content, and method to confirm the result.
 
 Query the service to resolve accounts, teams, projects, fields, and statuses to real identifiers. Ask for clarification when names are missing or ambiguous, without creating values to accommodate the policy. A subticket rule does not extend to its parent; completing the parent requires an explicit rule and satisfaction of the criteria for all required items.
 

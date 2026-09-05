@@ -63,7 +63,7 @@ Obtain an explicit user choice for each of the three decisions below. Ask every 
 
 Use local-only tracking or automatic delegation only when the user explicitly selects them or accepts those explained defaults. Silence, skipped questions, and missing answers leave decisions pending. If any choice is missing, ask for it, end the turn, and wait before presenting the plan for approval.
 
-Keep each answer and its interpretation in the conversation for the approved file. When a tracking policy is supplied, read [references/tracking-rules.md](references/tracking-rules.md) to resolve targets, events, and actions before approval.
+Keep each complete answer verbatim and its interpretation separately in the conversation for the approved file. An answer can address several decisions regardless of which question prompted it; apply each requirement to the relevant decisions and ask only for choices still unanswered. When a tracking policy is supplied, read [references/tracking-rules.md](references/tracking-rules.md) to resolve targets, events, and actions before approval.
 
 Divide work into phases by acceptance criteria and dependencies, associate tickets, and define a stable progress measure. Read [references/delegation.md](references/delegation.md) for every plan. Choose direct, delegated, or mixed execution with a delivery-specific reason. Assign each block, define executor count and concurrency, and resolve capability gaps before presenting the strategy for approval.
 
@@ -99,7 +99,7 @@ Ask for approval or adjustments and end the turn. Approval must be given as text
 
 Only after plan approval, read [references/orchestration-template.md](references/orchestration-template.md), apply its ignore rule, and create `ORCHESTRATION.md` at the confirmed root. Transfer the discovery, original input and policies, approved decisions, execution assignments, and approval from the conversation. Reuse a selected existing file; replacing another delivery's file also requires the confirmation from step 1.
 
-Check the saved file: source, work items, approved decisions, strategy, and next action. Plan approval permits saving the plan; it does not authorize implementation, executor launch, or external tracking actions. Source selection is also separate from start authorization.
+Save the original answers once in `Original user instructions`, with interpretations referencing them from the relevant decision sections. Follow the template's fidelity and coverage checks before execution and after policy or plan changes. Check the saved file: source, work items, approved decisions, strategy, and next action. Plan approval permits saving the plan; it does not authorize implementation, executor launch, or external tracking actions. Source selection is also separate from start authorization.
 
 If there is no valid authorization yet, record the start as pending, show the path, and ask whether to begin. **End the turn and wait.** Until the answer, limit work to preparation and local records.
 
