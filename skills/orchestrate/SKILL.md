@@ -121,6 +121,8 @@ Confirm and operate hard gates in the main session. Run one deployment at a time
 
 Execute silently: progress, evidence, and the reason for any operational decision a future session must understand go to `ORCHESTRATION.md`. Chat carries only the completion report, a human blocker, a saved checkpoint, or a decision, hard gate, or missing authorization that needs the user. Answer a user question from the current file state.
 
+If a higher-priority runtime rule requires periodic commentary during a long-running turn, use only its minimum required cadence and send one neutral sentence stating that execution continues and no user action is needed. Keep ticket identifiers, external statuses, completed steps, test counts, and post-compaction recovery summaries in `ORCHESTRATION.md`.
+
 Silent execution runs to the objective: after each ticket, phase, and record update, continue with the next authorized work in the same turn, monitoring ongoing CI and subagents. A checkpoint request interrupts this loop through the checkpoint mode; saving it is a pause, not delivery completion.
 
 **Complete when:** all items satisfy their acceptance criteria, the pipeline has reached the destination, and required tracking actions are confirmed. Report the result, key evidence references, item statuses, tracking results, file path, and `Deferred work` list, referencing the file for details instead of restating them. Tracking failures remain pending even when the code is delivered.
