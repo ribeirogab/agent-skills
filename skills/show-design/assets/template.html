@@ -8,39 +8,41 @@
 <meta name="description" content="Technical design: {{title}}. The design is the content of the main element; the review-comments JSON after it holds the review thread; the style and script at the end only render the page.">
 <title>{{title}}</title>
 <style>body{visibility:hidden}</style>
+<script>try{var theme=localStorage.getItem("show-design:theme");if(theme)document.documentElement.dataset.theme=theme}catch(error){}</script>
 </head>
 <body data-slug="{{slug}}" data-build="{{build}}">
-<main class="design" id="design">
+<main class="design" id="design" data-anchor="page">
 {{content}}
 </main>
 <script type="application/json" id="review-comments">
 {{comments}}
 </script>
-<header class="page-meta">
-<span class="eyebrow">Technical design</span>
-<code class="slug">{{slug}}</code>
-<span class="built">Built {{built}}</span>
-<span class="legend" aria-label="Change legend"><span class="tag added">added</span><span class="tag changed">changed</span><span class="tag removed">removed</span><span class="tag moved">moved</span><span class="tag proposed">proposed</span><span class="tag unverified">unverified</span></span>
+<header class="topbar sd-ui">
+<span class="meta"><span class="slug">{{slug}}</span><span class="dot">·</span>built {{built}}</span>
+<span class="actions">
+<button class="bar-button" id="theme-toggle" type="button" data-tip="Switch theme" aria-label="Switch theme"></button>
+<button class="bar-button" id="comment-mode" type="button" aria-pressed="false" data-tip="Comment mode (C)"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 3.5h11v7h-6l-3 2.5v-2.5h-2z"/></svg><span>Comment</span></button>
+<button class="bar-button" id="comments-list" type="button" aria-expanded="false" aria-controls="drawer" aria-label="All comments" data-tip="All comments"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 4.5h10M3 8h10M3 11.5h6"/></svg><span data-count="open">0</span></button>
+</span>
 </header>
 <nav class="toc" id="toc" aria-label="Contents"></nav>
-<aside class="review" id="review" aria-label="Review comments">
-<div class="review-header">
-<h2>Review</h2>
+<div class="drawer-backdrop sd-ui" id="drawer-backdrop"></div>
+<aside class="drawer sd-ui" id="drawer" aria-label="Comments" aria-modal="true" role="dialog">
+<div class="drawer-head">
+<h2>Comments</h2>
 <div class="tabs" role="tablist" aria-label="Filter comments">
 <button type="button" role="tab" data-filter="open" aria-selected="true">Open <span data-count="open">0</span></button>
 <button type="button" role="tab" data-filter="resolved" aria-selected="false">Resolved <span data-count="resolved">0</span></button>
 <button type="button" role="tab" data-filter="all" aria-selected="false">All</button>
 </div>
-<button class="review-close" id="review-close" type="button" aria-label="Close comments">×</button>
+<button class="icon-button" id="drawer-close" type="button" aria-label="Close comments" data-tip="Close">×</button>
 </div>
-<p class="review-hint">Select text and press Comment, hover a block and press +, or click a diagram node.</p>
-<div class="review-list" id="review-list"></div>
-<div class="review-footer">
-<p class="review-mode" id="review-mode"></p>
+<div class="drawer-list" id="drawer-list"></div>
+<div class="drawer-foot">
+<p class="drawer-mode" id="drawer-mode"></p>
 <button class="button" id="copy-comments" type="button">Copy open comments as Markdown</button>
 </div>
 </aside>
-<button class="review-toggle" id="review-toggle" type="button" aria-controls="review" aria-expanded="false">Comments <span data-count="open">0</span></button>
 <style>
 {{css}}
 </style>

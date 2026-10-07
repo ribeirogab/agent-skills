@@ -36,7 +36,7 @@ PORT_BASE = 47000
 PORT_SPAN = 1000
 MAX_REQUEST_BYTES = 1_000_000
 PAGE_PATTERN = re.compile(
-    r'<main class="design" id="design">\s*(?P<content>.*?)\s*</main>\s*'
+    r'<main class="design" id="design"[^>]*>\s*(?P<content>.*?)\s*</main>\s*'
     r'<script type="application/json" id="review-comments">\s*(?P<comments>.*?)\s*</script>',
     re.DOTALL,
 )
@@ -167,7 +167,9 @@ class SourceScanner(HTMLParser):
         anchor = attributes.get("data-anchor")
         line = self.getpos()[0]
         if anchor is not None:
-            if anchor.strip():
+            if anchor == "page":
+                self.problems.append(f'line {line}: data-anchor="page" is reserved for the page itself')
+            elif anchor.strip():
                 self.anchors.append(anchor)
             else:
                 self.problems.append(f"line {line}: empty data-anchor on <{tag}>")
@@ -327,6 +329,21 @@ def new_comment_id(taken):
             return candidate
 
 
+def clean_point(value):
+    if value is None:
+        return None
+    if not isinstance(value, dict):
+        raise DesignError("point must be an object")
+    point = {}
+    for axis in ("x", "y"):
+        number = value.get(axis)
+        if not isinstance(number, (int, float)) or isinstance(number, bool) or not 0 <= number <= 1:
+            raise DesignError(f"point.{axis} must be a number from 0 to 1")
+        point[axis] = round(float(number), 4)
+    point["block"] = clean_text(value.get("block"), 200, "point.block")
+    return point
+
+
 def create_comment(path, data):
     now = utc_now()
     comment = {
@@ -335,6 +352,7 @@ def create_comment(path, data):
         "location": clean_text(data.get("location"), 500, "location"),
         "quote": clean_text(data.get("quote"), 2000, "quote"),
         "body": clean_text(data.get("body"), 10000, "body", required=True),
+        "point": clean_point(data.get("point")),
         "status": "open",
         "createdAt": now,
         "updatedAt": now,
@@ -637,7 +655,7 @@ def indent(text, prefix="  "):
 def list_comments(args):
     path = design_file(args.design_file)
     _, match, document = load_page(path)
-    anchors = set(scan(match.group("content")).anchors)
+    anchors = set(scan(match.group("content")).anchors) | {"page"}
     selected = [comment for comment in document["comments"] if args.all or comment.get("status") != "resolved"]
     if args.json:
         print(json.dumps(selected, ensure_ascii=False, indent=2))

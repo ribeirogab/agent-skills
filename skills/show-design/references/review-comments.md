@@ -6,7 +6,7 @@ The page saves each comment into `design.html` itself, as the embedded `review-c
 
 ## 1. Read
 
-Run `comments <design-file>`. Each entry gives the comment id, the location (section and element), the anchor, the quoted text or diagram node, the comment, and earlier replies. An entry marked `outdated` points to an anchor the current content no longer has; locate it from its location and quote.
+Run `comments <design-file>`. Each entry gives the comment id, the location (section and element), the anchor, the quoted text or diagram node, the comment, and the thread of replies; the anchor `page` means the title or the lead paragraph. An entry marked `outdated` points to an anchor the current content no longer has; locate it from its location and quote.
 
 ## 2. Address each comment
 

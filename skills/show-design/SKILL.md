@@ -41,6 +41,6 @@ On a built page, edit only the content between `<main class="design" id="design"
 
 ## 4. Hand over
 
-Send a short message with the URL, the absolute path of `design.html` (the file to hand to `/to-spec` and to implementation as context), the number of open questions on the page, and how to review: select text and press **Comment**, hover a block and press **+**, or click a diagram node, then say in the chat that the comments are ready. End the turn.
+Send a short message with the URL, the absolute path of `design.html` (the file to hand to `/to-spec` and to implementation as context), the number of open questions on the page, and how to review: turn on **Comment** in the header (or press `C`) and click anywhere, including a diagram node or an ERD column; open a diagram with **Expand** to zoom and pan; then say in the chat that the comments are ready. End the turn.
 
 When the plan changes later, edit the content and repeat step 3. An open page reloads by itself when a new build lands.
