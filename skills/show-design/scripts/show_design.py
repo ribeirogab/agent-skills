@@ -32,6 +32,17 @@ CHANGE_KINDS = ("added", "changed", "removed", "moved", "unchanged")
 STATUSES = ("open", "resolved")
 MERMAID_TYPE = "text/x-mermaid"
 FORBIDDEN_TAGS = ("html", "head", "body", "main")
+SECTIONS = (
+    ("section:overview", "Overview"),
+    ("section:architecture", "Architecture"),
+    ("section:flows", "Flows"),
+    ("section:changes", "Changes"),
+    ("section:data-model", "Data model"),
+    ("section:contracts", "Contracts"),
+    ("section:risks", "Risks"),
+    ("section:questions", "Open questions"),
+    ("section:out-of-scope", "Out of scope"),
+)
 PORT_BASE = 47000
 PORT_SPAN = 1000
 MAX_REQUEST_BYTES = 1_000_000
@@ -161,6 +172,8 @@ class SourceScanner(HTMLParser):
         self.sections = 0
         self.diagrams = 0
         self.open_sections = []
+        self.closed_sections = []
+        self.heading_parts = None
 
     def handle_starttag(self, tag, attrs):
         attributes = dict(attrs)
@@ -183,11 +196,11 @@ class SourceScanner(HTMLParser):
             self.inside_title = self.titles == 1
         elif tag == "section":
             self.sections += 1
-            self.open_sections.append({"anchor": anchor or "", "line": line, "heading": False})
+            self.open_sections.append({"anchor": anchor or "", "line": line, "heading": None})
             if not anchor:
                 self.problems.append(f'line {line}: <section> needs data-anchor="section:<key>"')
-        elif tag == "h2" and self.open_sections:
-            self.open_sections[-1]["heading"] = True
+        elif tag == "h2" and self.open_sections and self.open_sections[-1]["heading"] is None:
+            self.heading_parts = []
         elif tag == "script" and attributes.get("type") == MERMAID_TYPE:
             self.diagrams += 1
             if not anchor:
@@ -200,14 +213,21 @@ class SourceScanner(HTMLParser):
     def handle_endtag(self, tag):
         if tag == "h1":
             self.inside_title = False
+        elif tag == "h2" and self.heading_parts is not None:
+            self.open_sections[-1]["heading"] = " ".join("".join(self.heading_parts).split())
+            self.heading_parts = None
         elif tag == "section" and self.open_sections:
             section = self.open_sections.pop()
-            if not section["heading"]:
+            if section["heading"] is None:
                 self.problems.append(f"line {section['line']}: section {section['anchor']} needs an <h2> heading")
+            else:
+                self.closed_sections.append(section)
 
     def handle_data(self, data):
         if self.inside_title:
             self.title_parts.append(data)
+        if self.heading_parts is not None:
+            self.heading_parts.append(data)
 
     @property
     def title(self):
@@ -229,6 +249,27 @@ def content_problems(scanner):
         problems.append(f"the content needs exactly one non-empty <h1>; found {scanner.titles}")
     if scanner.sections == 0:
         problems.append('the content needs at least one <section data-anchor="section:<key>">')
+    problems.extend(section_problems(scanner.closed_sections))
+    return problems
+
+
+def section_problems(sections):
+    headings = dict(SECTIONS)
+    order = [anchor for anchor, _ in SECTIONS]
+    problems = []
+    last = -1
+    for section in sections:
+        anchor, line = section["anchor"], section["line"]
+        if anchor not in headings:
+            if anchor:
+                problems.append(f'line {line}: unknown section "{anchor}"; use one of {", ".join(order)}')
+            continue
+        if section["heading"] != headings[anchor]:
+            problems.append(f'line {line}: section {anchor} needs the English heading <h2>{headings[anchor]}</h2>, found "{section["heading"]}"')
+        index = order.index(anchor)
+        if index < last:
+            problems.append(f"line {line}: section {anchor} is out of order; sections follow {', '.join(order)}")
+        last = max(last, index)
     return problems
 
 

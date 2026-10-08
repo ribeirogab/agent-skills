@@ -591,7 +591,7 @@ function openComposer(target, clientX, clientY) {
 
 function formatTime(value) {
   const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? "" : date.toLocaleString(document.documentElement.lang || undefined, { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+  return Number.isNaN(date.getTime()) ? "" : date.toLocaleString("en", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
 }
 
 function messageView(message) {

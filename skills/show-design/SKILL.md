@@ -24,7 +24,7 @@ Keep three sources apart throughout: what the code establishes, what the convers
 
 ## 2. Write the content
 
-Choose a short kebab-case feature slug, reusing the slug this feature already has under `.scratch/`. Write the design content into `.scratch/<feature-slug>/design.html` with the sections of [references/sections.md](references/sections.md), in its order and under its markup contract: the first build wraps that content into the full page. Write prose in the user's language; keep code identifiers, paths, and schema names exactly as the code spells them.
+Choose a short kebab-case feature slug, reusing the slug this feature already has under `.scratch/`. Write the design content into `.scratch/<feature-slug>/design.html` with the sections of [references/sections.md](references/sections.md), in its order and under its markup contract: the first build wraps that content into the full page. Write the content in the language of your conversation with the user, and keep code identifiers, paths, and schema names exactly as the code spells them. Section headings and everything the template draws stay in English.
 
 On a built page, edit only the content between `<main class="design" id="design">` and its `</main>`. The build regenerates everything after it and keeps the embedded comments.
 
@@ -32,7 +32,7 @@ On a built page, edit only the content between `<main class="design" id="design"
 
 ## 3. Build, serve, and check
 
-1. `build <design-file> --lang <user-language-tag>` validates the content and rewrites the file as the complete page. Fix every reported problem and build again.
+1. `build <design-file> --lang <content-language-tag>` validates the content and rewrites the file as the complete page. Fix every reported problem and build again.
 2. Start `serve <design-file>` as a background process. It reuses a server already running for the file and prints the URL.
 3. Open the URL for the user: in your browser preview tool when you have one, otherwise run `serve` with `--open`. On a remote host, give the URL with the SSH port-forward command for its port.
 4. `status <design-file> --wait 30` reads the render report the open page sends. Fix each failed diagram, rebuild, and check again.
