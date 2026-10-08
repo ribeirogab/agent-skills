@@ -7,7 +7,7 @@ Read before writing or reworking the design content.
 The design content is an HTML fragment: the first build wraps it into the page template, which supplies the styles, the table of contents, the change legends, the diagram viewer, Mermaid, and the comment layer. Write content markup only, with the components below; `<html>`, `<head>`, `<body>`, `<main>`, and scripts other than diagrams belong to the template.
 
 - Open with one `<h1>` (the design title, which also titles the page) and one `<p class="lede">` that states the change in one or two sentences.
-- Wrap each section in `<section data-anchor="section:<key>">` with one `<h2>` holding the exact English heading listed below. Write everything else in the language of the conversation with the user; the build rejects a heading that differs, an unknown section, or a section out of order.
+- Wrap each section in `<section data-anchor="section:<key>">` with one `<h2>` heading in English: the exact heading listed below for a base section (the build checks those), or a short English heading for a section you add. Write everything else in the language of the conversation with the user.
 - Give every element a reviewer could point at a `data-anchor`: each decision, tree entry, table row, diagram, contract, risk, question, and scope item. Other blocks take comments through their section's anchor, with the block text as the quote. `page` is reserved for the page itself. Build anchor values as `<kind>:<key>` from stable names: `decision:d1`, `file:src/orders/status.ts`, `component:OrderStatusBadge`, `entity:Order`, `column:Order.status`, `contract:PATCH /orders/{id}/status`, `diagram:architecture`. Comments attach through anchors, so keep an anchor unchanged across rebuilds while its element keeps its meaning, and give a reworked element a new anchor.
 - Mark change state with `data-change="added|changed|removed|moved|unchanged"` on tree entries, table rows, and cards. The page draws the marker (`+ ~ − →`) and adds a one-line legend under the heading of each section that uses markers.
 - Write each diagram as `<script type="text/x-mermaid" data-anchor="diagram:<key>" data-caption="<one line>">…</script>`. The script element keeps `<`, `>`, and `&` literal, so write Mermaid as is.
@@ -27,7 +27,7 @@ The design content is an HTML fragment: the first build wraps it into the page t
 
 ## Sections
 
-Write the sections in this order, each under its exact heading. Skip a section when the change does not touch its subject, or when its own skip condition below holds; a section on the page always has content.
+These sections are the base structure, in their usual order. Skip a section when the change does not touch its subject or its own skip condition below holds, and add or reorder sections when the design reads better that way; a section on the page always has content.
 
 ### 1. `section:overview`, heading `Overview`
 

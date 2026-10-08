@@ -255,22 +255,11 @@ def content_problems(scanner):
 
 def section_problems(sections):
     headings = dict(SECTIONS)
-    order = [anchor for anchor, _ in SECTIONS]
-    problems = []
-    last = -1
-    for section in sections:
-        anchor, line = section["anchor"], section["line"]
-        if anchor not in headings:
-            if anchor:
-                problems.append(f'line {line}: unknown section "{anchor}"; use one of {", ".join(order)}')
-            continue
-        if section["heading"] != headings[anchor]:
-            problems.append(f'line {line}: section {anchor} needs the English heading <h2>{headings[anchor]}</h2>, found "{section["heading"]}"')
-        index = order.index(anchor)
-        if index < last:
-            problems.append(f"line {line}: section {anchor} is out of order; sections follow {', '.join(order)}")
-        last = max(last, index)
-    return problems
+    return [
+        f'line {section["line"]}: section {section["anchor"]} needs the English heading <h2>{headings[section["anchor"]]}</h2>, found "{section["heading"]}"'
+        for section in sections
+        if section["anchor"] in headings and section["heading"] != headings[section["anchor"]]
+    ]
 
 
 def feature_slug(path):

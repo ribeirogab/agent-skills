@@ -24,7 +24,7 @@ Keep three sources apart throughout: what the code establishes, what the convers
 
 ## 2. Write the content
 
-Choose a short kebab-case feature slug, reusing the slug this feature already has under `.scratch/`. Write the design content into `.scratch/<feature-slug>/design.html` with the sections of [references/sections.md](references/sections.md), in its order and under its markup contract: the first build wraps that content into the full page. Write the content in the language of your conversation with the user, and keep code identifiers, paths, and schema names exactly as the code spells them. Section headings and everything the template draws stay in English.
+Choose a short kebab-case feature slug, reusing the slug this feature already has under `.scratch/`. Write the design content into `.scratch/<feature-slug>/design.html` with [references/sections.md](references/sections.md) as the base structure and under its markup contract: the first build wraps that content into the full page. Write the content in the language of your conversation with the user, and keep code identifiers, paths, and schema names exactly as the code spells them. Section headings and everything the template draws stay in English.
 
 On a built page, edit only the content between `<main class="design" id="design">` and its `</main>`. The build regenerates everything after it and keeps the embedded comments.
 
