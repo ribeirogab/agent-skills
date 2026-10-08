@@ -167,6 +167,58 @@ function addChangeLegends() {
   }
 }
 
+const CODE_RULES = [
+  ["comment", /(?<![:\w/])\/\/[^\n]*|\/\*[\s\S]*?\*\//y],
+  ["property", /(?:"(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*')(?=\s*:(?!:))/y],
+  ["string", /'(?:\\.|[^'\\\n])*'|"(?:\\.|[^"\\\n])*"|`(?:\\.|[^`\\])*`/y],
+  ["property", /[A-Za-z_$][\w$-]*(?=\??\s*:(?!:))/y],
+  ["keyword", /\b(?:true|false|null|undefined|const|let|var|type|interface|enum|export|import|from|return|async|await|new|extends|function)\b/y],
+  ["method", /\b(?:GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS)\b/y],
+  ["type", /\b(?:string|number|boolean|bigint|object|any|unknown|void|never|[A-Z][A-Za-z0-9_]*)\b/y],
+  ["number", /\b\d+(?:\.\d+)?\b/y],
+  ["operator", /=>|→|\.\.\.|\?\?|\|\||&&|[|&?=<>!+\-*%]/y],
+  ["punctuation", /[{}[\]();,.:]/y],
+];
+
+function tokenize(source) {
+  const nodes = [];
+  let plain = "";
+  let position = 0;
+  const flush = () => {
+    if (plain) nodes.push(document.createTextNode(plain));
+    plain = "";
+  };
+  while (position < source.length) {
+    let token = null;
+    for (const [kind, pattern] of CODE_RULES) {
+      pattern.lastIndex = position;
+      const match = pattern.exec(source);
+      if (match?.[0]) {
+        token = { kind, text: match[0] };
+        break;
+      }
+    }
+    if (!token) {
+      plain += source[position];
+      position += 1;
+      continue;
+    }
+    flush();
+    nodes.push(element("span", { class: `tok-${token.kind}`, text: token.text }));
+    position += token.text.length;
+  }
+  flush();
+  return nodes;
+}
+
+function highlightCode() {
+  for (const code of design.querySelectorAll("pre > code")) {
+    if (code.dataset.highlighted || /\blanguage-(?:text|plain)\b/.test(code.className)) continue;
+    code.replaceChildren(...tokenize(code.textContent));
+    code.dataset.highlighted = "true";
+  }
+}
+
 function sections() {
   return [...design.querySelectorAll("section[data-anchor]")];
 }
@@ -1032,6 +1084,7 @@ function bindUi() {
 
 async function boot() {
   wrapTables();
+  highlightCode();
   addChangeLegends();
   buildToc();
   bindUi();

@@ -20,6 +20,7 @@ The design content is an HTML fragment: the first build wraps it into the page t
 | File or component tree | `<ul class="tree">`; directory `<li class="dir"><code>src/orders/</code><ul>…</ul></li>`; entry `<li data-anchor="file:<path>" data-change="…"><code>name</code><span class="note">responsibility or change</span></li>` |
 | Table | `<table>` with `<thead>`; anchored rows `<tr data-anchor="…" data-change="…">` |
 | Card | `<article class="card" data-anchor="…" data-change="…"><h3>…</h3>…</article>`, with `<pre><code>` for payloads |
+| Code block | `<pre><code>…</code></pre>`; the page colors its syntax (keys, strings, types, comments, HTTP methods). Mark a block that is not code with `<code class="language-text">` |
 | Callout | `<aside class="callout">`, or `class="callout warning"` for a hazard |
 | Questions | `<ol class="questions">` of `<li data-anchor="question:qN">question<p class="recommendation">recommended answer</p></li>` |
 | Risks | `<ul class="risks">` of `<li data-anchor="risk:rN">risk<p class="mitigation">mitigation</p></li>` |
