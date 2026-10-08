@@ -846,6 +846,8 @@ function bindViewerGestures(overlay) {
   });
   overlay.addEventListener("pointerdown", (event) => {
     if (event.target.closest(".sd-ui")) return;
+    event.preventDefault();
+    getSelection()?.removeAllRanges();
     viewer.pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
     start = { x: event.clientX, y: event.clientY, vx: viewer.x, vy: viewer.y };
     viewer.moved = false;
