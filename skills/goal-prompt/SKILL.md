@@ -39,12 +39,11 @@ Ask every open decision of the round at once, numbered, each with its options an
 ➡️ <recommended answer, with its reason in one sentence>
 ```
 
-The first round covers these five destination topics:
+The first round covers these four destination topics:
 
 - **Finish line**: how far the run goes: done locally, PRs open with CI green, deployed to staging, deployed to production, or validated in production. Phrase each option as a state of the delivery, so it holds for any number of PRs.
 - **Proof**: the command or observable result behind each criterion, when the repository leaves it unclear.
 - **Out of scope**: what stays untouched: files, migrations, data, other services.
-- **Budget**: the turn limit for the run, sized to the task.
 - **Source match**: which passage the text names, when it matches several passages or none.
 
 Open the round with an **Assumed:** line for each of these topics that the source or the conversation already settles, so the user can correct it. Wait for the answers, then ask the next round with the decisions they opened.
@@ -59,7 +58,7 @@ Source: <link, when there is one>
 Done when:
 - <binary criterion, with the command that proves it>
 Constraints: <limits the agent would cross without being told>
-Finish line: <where the run stops, e.g. "do not deploy to production">. Stop after <N> turns.
+Finish line: <where the run stops, e.g. "do not deploy to production">.
 ```
 
 Keep it under 100 words, with one to three criteria. Write it in the language of your conversation with the user, labels included.
