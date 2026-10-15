@@ -8,6 +8,8 @@ disable-model-invocation: true
 
 Write the prompt for a `/goal` run. `/goal` keeps an agent working turn after turn until a condition holds. In Claude Code, a small model with no tools judges the condition from the conversation alone; in Codex, the agent itself declares the goal met. Either way, the prompt describes an **end state**: a condition that is true or false, proven by evidence the run leaves in the conversation.
 
+The prompt fixes the **destination**: where the run stops and how to prove it. The agent that runs the goal owns the **route**: how many PRs, how the work splits, its order, its delegation. Keep every question and every line of the prompt at the destination.
+
 ## Invocation
 
 | Input | Source | Role of the conversation |
@@ -37,15 +39,15 @@ Ask every open decision of the round at once, numbered, each with its options an
 ➡️ <recommended answer, with its reason in one sentence>
 ```
 
-The first round covers:
+The first round covers these five destination topics:
 
-- **Finish line**: how far the run goes: run locally, open a PR, deploy to staging, deploy to production, or validate in production.
+- **Finish line**: how far the run goes: done locally, PRs open with CI green, deployed to staging, deployed to production, or validated in production. Phrase each option as a state of the delivery, so it holds for any number of PRs.
 - **Proof**: the command or observable result behind each criterion, when the repository leaves it unclear.
 - **Out of scope**: what stays untouched: files, migrations, data, other services.
 - **Budget**: the turn limit for the run, sized to the task.
 - **Source match**: which passage the text names, when it matches several passages or none.
 
-Open the round with an **Assumed:** line for each topic the source or the conversation already settles, so the user can correct it. Wait for the answers, then ask the next round with the decisions they opened.
+Open the round with an **Assumed:** line for each of these topics that the source or the conversation already settles, so the user can correct it. Wait for the answers, then ask the next round with the decisions they opened.
 
 **Ready when:** every decision is settled and the user has seen every assumption.
 
@@ -60,11 +62,11 @@ Constraints: <limits the agent would cross without being told>
 Finish line: <where the run stops, e.g. "do not deploy to production">. Stop after <N> turns.
 ```
 
-Keep it under 100 words, with one to three criteria. The prompt carries the destination, the proof, and the limits; the agent chooses the route. Write it in the language of your conversation with the user, labels included.
+Keep it under 100 words, with one to three criteria. Write it in the language of your conversation with the user, labels included.
 
 Make the prompt self-contained: write into it the facts from the conversation that the agent needs. A long run compacts its context, and a pointer such as "step 2 above" can vanish; a link stays stable, so cite it under `Source:`.
 
-**Ready when:** every criterion is binary and leaves evidence in the conversation (command output, a PR link, a deploy URL), the first line states an end state, the finish line is written, and each constraint changes what the agent would do by default.
+**Ready when:** every criterion is binary and leaves evidence in the conversation (command output, a PR link, a deploy URL), the first line states an end state, the finish line is written, each constraint changes what the agent would do by default, and every line holds at the destination, whatever route the agent takes.
 
 ## 4. Deliver
 
