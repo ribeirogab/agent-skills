@@ -167,6 +167,115 @@ function addChangeLegends() {
   }
 }
 
+const CHEVRON = "M6 3.5 10.5 8 6 12.5";
+const FOLD_ALL = "M4.5 2.5 8 6l3.5-3.5M4.5 13.5 8 10l3.5 3.5";
+const UNFOLD_ALL = "M4.5 6 8 2.5 11.5 6M4.5 10 8 13.5 11.5 10";
+
+function changeSummary(node, extra = "") {
+  const counts = {};
+  for (const entry of node.querySelectorAll("li[data-change]")) counts[entry.dataset.change] = (counts[entry.dataset.change] ?? 0) + 1;
+  const parts = Object.entries(CHANGE_MARKS)
+    .filter(([kind]) => counts[kind])
+    .map(([kind, mark]) => element("span", { class: kind, text: `${mark}${counts[kind]}` }));
+  return element("span", { class: `sd-ui tree-summary ${extra}`.trim() }, parts);
+}
+
+function treeDepth(item, tree) {
+  let depth = 0;
+  for (let node = item.parentElement; node !== tree; node = node.parentElement) {
+    if (node.matches("li")) depth += 1;
+  }
+  return depth;
+}
+
+function addTreeRow(item, depth) {
+  const folder = item.classList.contains("dir");
+  const name = collapse(item.querySelector(":scope > code")?.textContent);
+  const row = element("div", { class: "tree-row" }, [...item.childNodes].filter((child) => !(child instanceof HTMLUListElement)));
+  const lead = folder
+    ? element("button", { class: "sd-ui tree-toggle", type: "button", "aria-expanded": "true", "aria-label": `Toggle ${name}`, html: icon(CHEVRON) })
+    : element("span", { class: "tree-spacer" });
+  row.prepend(element("span", { class: "tree-indent", style: `--depth: ${depth}` }), lead);
+  item.prepend(row);
+  if (!folder) return;
+  item.classList.add("tree-folder");
+  row.append(changeSummary(item));
+}
+
+const toggleOf = (folder) => folder.querySelector(":scope > .tree-row > .tree-toggle");
+
+function setFolded(folder, folded, deep = false) {
+  for (const target of deep ? [folder, ...folder.querySelectorAll(".tree-folder")] : [folder]) {
+    target.classList.toggle("folded", folded);
+    toggleOf(target).setAttribute("aria-expanded", String(!folded));
+  }
+}
+
+function foldedAncestors(node) {
+  const folders = [];
+  for (let folder = node?.closest?.(".tree-folder.folded"); folder; folder = folder.parentElement.closest(".tree-folder.folded")) folders.push(folder);
+  return folders;
+}
+
+function unfold(node) {
+  for (const folder of foldedAncestors(node)) setFolded(folder, false);
+}
+
+function shownFrame(node) {
+  return foldedAncestors(node).at(-1)?.querySelector(":scope > .tree-row") ?? node;
+}
+
+function onTreeClick(event) {
+  const folder = event.target.closest(".tree-row")?.parentElement;
+  if (!folder?.classList.contains("tree-folder")) return;
+  setFolded(folder, !folder.classList.contains("folded"), event.altKey);
+}
+
+function onTreeKey(event) {
+  const toggle = event.target.closest?.(".tree-toggle");
+  if (!toggle || event.metaKey || event.ctrlKey || event.altKey) return;
+  const folder = toggle.closest(".tree-folder");
+  const folded = folder.classList.contains("folded");
+  const parent = folder.parentElement.closest(".tree-folder");
+  const toggles = [...event.currentTarget.querySelectorAll(".tree-toggle")].filter((node) => node.offsetParent);
+  const index = toggles.indexOf(toggle);
+  const moves = {
+    ArrowRight: () => (folded ? setFolded(folder, false) : toggles[index + 1]?.focus()),
+    ArrowLeft: () => (folded ? parent && toggleOf(parent).focus() : setFolded(folder, true)),
+    ArrowDown: () => toggles[index + 1]?.focus(),
+    ArrowUp: () => toggles[index - 1]?.focus(),
+  };
+  if (!moves[event.key]) return;
+  event.preventDefault();
+  moves[event.key]();
+}
+
+function treeHead(tree, frame) {
+  const entries = [...tree.querySelectorAll("li:not(.dir)")];
+  const [singular, plural] = entries.every((entry) => entry.dataset.anchor?.startsWith("file:")) ? ["file", "files"] : ["entry", "entries"];
+  const total = element("span", { class: "tree-total" }, [`${entries.length} ${entries.length === 1 ? singular : plural}`, changeSummary(tree, "always")]);
+  const foldAll = (folded) => () => {
+    for (const folder of frame.querySelectorAll(".tree-folder")) setFolded(folder, folded);
+  };
+  const folders = tree.querySelector("li.dir")
+    ? [
+        tree.querySelector("li.dir li.dir") ? element("span", { class: "tree-hint", text: `${isMac ? "Option" : "Alt"}+click opens or closes every subfolder` }) : null,
+        element("button", { class: "tree-action", type: "button", "aria-label": "Collapse all", "data-tip": "Collapse all", html: icon(FOLD_ALL), onclick: foldAll(true) }),
+        element("button", { class: "tree-action", type: "button", "aria-label": "Expand all", "data-tip": "Expand all", html: icon(UNFOLD_ALL), onclick: foldAll(false) }),
+      ]
+    : [];
+  return element("div", { class: "sd-ui tree-head" }, [total, ...folders]);
+}
+
+function enhanceTrees() {
+  for (const tree of design.querySelectorAll("ul.tree")) {
+    for (const item of tree.querySelectorAll("li")) addTreeRow(item, treeDepth(item, tree));
+    const frame = element("div", { class: "tree-frame", onclick: onTreeClick, onkeydown: onTreeKey });
+    tree.replaceWith(frame);
+    frame.append(treeHead(tree, frame), tree);
+  }
+}
+
 const CODE_RULES = [
   ["comment", /(?<![:\w/])\/\/[^\n]*|\/\*[\s\S]*?\*\//y],
   ["property", /(?:"(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*')(?=\s*:(?!:))/y],
@@ -346,7 +455,7 @@ function labelOf(target) {
   const [kind, ...rest] = target.dataset.anchor.split(":");
   if (NAMED_KINDS.has(kind) && rest.length) return rest.join(":");
   if (target.matches("figure.diagram")) return target.dataset.caption || target.dataset.anchor;
-  const lead = target.querySelector(":scope > h3, :scope > strong, :scope > summary, :scope > td, :scope > th, :scope > code");
+  const lead = target.querySelector(":scope > h3, :scope > strong, :scope > summary, :scope > td, :scope > th, :scope > code, :scope > .tree-row > code");
   return truncate(collapse((lead ?? target).textContent), 80);
 }
 
@@ -361,8 +470,9 @@ function locate(anchor) {
 
 function readableText(node) {
   const copy = node.cloneNode(true);
+  for (const chrome of copy.querySelectorAll(".sd-ui")) chrome.remove();
   for (const lineBreak of copy.querySelectorAll("br")) lineBreak.replaceWith(" ");
-  for (const part of copy.querySelectorAll("p, div, li, dt, dd, td, th, h1, h2, h3, h4, pre, blockquote, strong, tspan, text")) {
+  for (const part of copy.querySelectorAll("p, div, li, dt, dd, td, th, h1, h2, h3, h4, pre, blockquote, strong, tspan, text, .note")) {
     part.prepend(" ");
     part.append(" ");
   }
@@ -467,8 +577,9 @@ function renderPins() {
   state.viewer?.pins.replaceChildren();
   for (const { comment, number } of numbered()) {
     if (!matchesFilter(comment)) continue;
-    const frame = frameFor(comment);
-    if (!frame) continue;
+    const target = frameFor(comment);
+    if (!target) continue;
+    const frame = shownFrame(target);
     const inViewer = Boolean(state.viewer?.stage.contains(frame));
     const { x, y, visible } = screenPoint(comment, frame);
     if (!visible) continue;
@@ -616,6 +727,7 @@ function openThread(comment, number) {
   closePopover();
   const frame = frameFor(comment);
   if (!frame) return;
+  unfold(frame);
   const fixed = Boolean(state.viewer?.stage.contains(frame));
   const resolved = comment.status === "resolved";
   const editable = state.store.editable(comment);
@@ -661,6 +773,7 @@ function reopenThread(id) {
 function revealComment(comment) {
   const frame = frameFor(comment);
   if (!frame) return toast("This part of the design is no longer on the page.");
+  unfold(frame);
   if (!matchesFilter(comment)) setFilter("all");
   setDrawer(false);
   if (!state.viewer?.stage.contains(frame)) {
@@ -1086,6 +1199,7 @@ async function boot() {
   wrapTables();
   highlightCode();
   addChangeLegends();
+  enhanceTrees();
   buildToc();
   bindUi();
   state.store = await chooseStore();
