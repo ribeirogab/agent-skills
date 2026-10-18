@@ -69,4 +69,4 @@ Make the prompt self-contained: write into it the facts from the conversation th
 
 ## 4. Deliver
 
-Return the prompt ready to paste, in one code block that starts with `/goal `.
+Return the prompt ready to paste, in one code block. The block holds only the prompt text, starting with the end-state sentence; do not write `/goal` in it.
