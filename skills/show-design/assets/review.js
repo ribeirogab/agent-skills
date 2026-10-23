@@ -193,11 +193,11 @@ function treeDepth(item, tree) {
 function addTreeRow(item, depth) {
   const folder = item.classList.contains("dir");
   const name = collapse(item.querySelector(":scope > code")?.textContent);
-  const row = element("div", { class: "tree-row" }, [...item.childNodes].filter((child) => !(child instanceof HTMLUListElement)));
+  const row = element("div", { class: "tree-row", style: `--depth: ${depth}` }, [...item.childNodes].filter((child) => !(child instanceof HTMLUListElement)));
   const lead = folder
     ? element("button", { class: "sd-ui tree-toggle", type: "button", "aria-expanded": "true", "aria-label": `Toggle ${name}`, html: icon(CHEVRON) })
     : element("span", { class: "tree-spacer" });
-  row.prepend(element("span", { class: "tree-indent", style: `--depth: ${depth}` }), lead);
+  row.prepend(element("span", { class: "tree-indent" }), lead);
   item.prepend(row);
   if (!folder) return;
   item.classList.add("tree-folder");

@@ -277,6 +277,7 @@ button {
   max-width: 880px;
   min-width: 0;
   padding: 28px 0 160px;
+  overflow-wrap: break-word;
 }
 
 .design h1 {
@@ -365,6 +366,7 @@ button {
   padding: 0;
   list-style: none;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 2px;
 }
 
@@ -494,6 +496,7 @@ button {
 .story {
   counter-reset: step;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 8px;
   margin: 16px 0;
   padding: 0;
@@ -953,6 +956,11 @@ tr[data-change="moved"] > td:first-child::before {
   gap: 8px;
   font-family: var(--mono);
   font-size: 14px;
+}
+
+.card > h3 > * {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .card[data-change] > h3::before {
@@ -1781,6 +1789,24 @@ textarea:not(.input-box textarea):focus-visible {
 
   .tree-hint {
     display: none;
+  }
+
+  .tree-row {
+    flex-wrap: wrap;
+  }
+
+  .tree-row > code {
+    flex: 1 1 0;
+    min-width: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .tree-row > .note {
+    flex-basis: 100%;
+    min-width: 0;
+    margin: 0 0 4px calc(var(--depth, 0) * 18px + 18px + 1.4em);
+    line-height: 1.45;
   }
 
   .popover:not(.fixed) {
