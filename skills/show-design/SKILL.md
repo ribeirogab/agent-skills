@@ -24,20 +24,20 @@ Keep three sources apart throughout: what the code establishes, what the convers
 
 ## 2. Write the content
 
-Choose a short kebab-case feature slug, reusing the slug this feature already has under `.scratch/`. Write the design content into `.scratch/<feature-slug>/design.html` with [references/sections.md](references/sections.md) as the base structure and under its markup contract: the first build wraps that content into the full page. Write the content in the language of your conversation with the user, and keep code identifiers, paths, and schema names exactly as the code spells them. Section headings and everything the template draws stay in English.
+Choose a short kebab-case feature slug, reusing the slug this feature already has under `.scratch/`. Write the design content into `.scratch/<feature-slug>/design.html` with [references/sections.md](references/sections.md) as the base structure, under its writing rules and its markup contract: the first build wraps that content into the full page. Write the content in the language of your conversation with the user, and keep code identifiers, paths, and schema names exactly as the code spells them. Section headings and everything the template draws stay in English.
 
 On a built page, edit only the content between `<main class="design" id="design">` and its `</main>`. The build regenerates everything after it and keeps the embedded comments.
 
-**Ready when:** every changed file is in the change tree, every touched entity and column is in the data model, every new or changed contract is listed, and every element a reviewer could point at carries a stable, unique `data-anchor`.
+**Ready when:** the summary alone tells what changes, every changed file is in the change tree, every touched entity and column is in the data model, every new or changed contract is listed, and every element a reviewer could point at carries a stable, unique `data-anchor`.
 
 ## 3. Build, serve, and check
 
-1. `build <design-file> --lang <content-language-tag>` validates the content and rewrites the file as the complete page. Fix every reported problem and build again.
+1. `build <design-file> --lang <content-language-tag>` validates the content and rewrites the file as the complete page. A problem stops the build; a warning names text that is hard to read: a long decision, a long sentence, a section without a takeaway, a missing summary, or a first diagram with too many nodes. Fix every problem and rewrite the text of every warning, then build again.
 2. Start `serve <design-file>` as a background process. It reuses a server already running for the file and prints the URL.
 3. Open the URL for the user: in your browser preview tool when you have one, otherwise run `serve` with `--open`. On a remote host, give the URL with the SSH port-forward command for its port.
 4. `status <design-file> --wait 30` reads the render report the open page sends. Fix each failed diagram, rebuild, and check again.
 
-**Ready when:** `status` reports that every diagram rendered for the current build.
+**Ready when:** the build reports no problem and no warning, and `status` reports that every diagram rendered for the current build.
 
 ## 4. Hand over
 

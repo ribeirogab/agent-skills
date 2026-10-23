@@ -1,7 +1,9 @@
 const MERMAID_URL = "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
 const POLL_INTERVAL = 2000;
 const NODE_SELECTOR = "g.node, g.cluster, g.edgeLabel, g.note, rect.actor, text.actor, text.messageText, text.noteText";
-const BLOCK_SELECTOR = "td, th, li, p, h1, h2, h3, h4, dt, dd, pre, blockquote, aside, .card";
+const BLOCK_SELECTOR = "td, th, li, p, h1, h2, h3, h4, dt, dd, pre, blockquote, aside, summary, .card";
+const TERM_SKIP = "code, pre, script, h1, h2, h3, dl.terms, summary, a, .term, .sd-ui";
+const TERM_TIP_WIDTH = 380;
 const NAMED_KINDS = new Set(["file", "component", "entity", "column", "table", "contract", "event", "job"]);
 const MIN_ZOOM = 0.1;
 const MAX_ZOOM = 8;
@@ -163,7 +165,7 @@ function addChangeLegends() {
     const shown = Object.keys(CHANGE_MARKS).filter((kind) => kinds.has(kind));
     if (!shown.length) continue;
     const legend = element("p", { class: "sd-ui change-legend" }, shown.map((kind) => element("span", {}, [element("b", { class: kind, text: CHANGE_MARKS[kind] }), kind])));
-    section.querySelector("h2")?.after(legend);
+    (section.querySelector(":scope > h2 + .takeaway") ?? section.querySelector("h2"))?.after(legend);
   }
 }
 
@@ -217,11 +219,20 @@ function foldedAncestors(node) {
   return folders;
 }
 
+function closedDetails(node) {
+  const closed = [];
+  for (let details = node?.closest?.("details:not([open])"); details; details = details.parentElement.closest("details:not([open])")) closed.push(details);
+  return closed;
+}
+
 function unfold(node) {
+  for (const details of closedDetails(node)) details.open = true;
   for (const folder of foldedAncestors(node)) setFolded(folder, false);
 }
 
 function shownFrame(node) {
+  const details = closedDetails(node).at(-1);
+  if (details) return details.querySelector(":scope > summary") ?? details;
   return foldedAncestors(node).at(-1)?.querySelector(":scope > .tree-row") ?? node;
 }
 
@@ -330,6 +341,61 @@ function highlightCode() {
 
 function sections() {
   return [...design.querySelectorAll("section[data-anchor]")];
+}
+
+const escapeRegExp = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+function wordForms(word) {
+  const escaped = escapeRegExp(word);
+  return /ão$/i.test(word) ? `(?:${escaped}|${escaped.slice(0, -2)}ões)` : `${escaped}(?:e?s)?`;
+}
+
+function termPattern(name) {
+  return new RegExp(`(?<![\\p{L}\\p{N}_])${name.split(/\s+/).map(wordForms).join("\\s+")}(?![\\p{L}\\p{N}_])`, "iu");
+}
+
+function glossary() {
+  return [...design.querySelectorAll("dl.terms > dt")]
+    .map((term) => {
+      const name = collapse(term.textContent.replace(/\([^)]*\)/g, ""));
+      const meaning = term.nextElementSibling?.matches("dd") ? collapse(term.nextElementSibling.textContent) : "";
+      return { name, meaning, pattern: termPattern(name) };
+    })
+    .filter((term) => term.name.length > 2 && term.meaning)
+    .sort((a, b) => b.name.length - a.name.length);
+}
+
+function textNodes(root) {
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, { acceptNode: (node) => (node.parentElement?.closest(TERM_SKIP) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT) });
+  const nodes = [];
+  while (walker.nextNode()) nodes.push(walker.currentNode);
+  return nodes;
+}
+
+function markFirstUse(root, term) {
+  for (const node of textNodes(root)) {
+    const match = term.pattern.exec(node.data);
+    if (!match) continue;
+    const word = node.splitText(match.index);
+    word.splitText(match[0].length);
+    word.replaceWith(element("span", { class: "term", tabindex: 0, "data-definition": term.meaning, text: word.data }));
+    return;
+  }
+}
+
+function placeTermTip(event) {
+  const term = event.target.closest?.(".term");
+  if (term) term.classList.toggle("flip", term.getBoundingClientRect().left > innerWidth - TERM_TIP_WIDTH);
+}
+
+function markTerms() {
+  const terms = glossary();
+  if (!terms.length) return;
+  for (const section of sections()) {
+    for (const term of terms) markFirstUse(section, term);
+  }
+  design.addEventListener("pointerover", placeTermTip);
+  design.addEventListener("focusin", placeTermTip);
 }
 
 function buildToc() {
@@ -1199,6 +1265,7 @@ async function boot() {
   wrapTables();
   highlightCode();
   addChangeLegends();
+  markTerms();
   enhanceTrees();
   buildToc();
   bindUi();

@@ -33,6 +33,7 @@ STATUSES = ("open", "resolved")
 MERMAID_TYPE = "text/x-mermaid"
 FORBIDDEN_TAGS = ("html", "head", "body", "main")
 SECTIONS = (
+    ("section:summary", "Summary"),
     ("section:overview", "Overview"),
     ("section:architecture", "Architecture"),
     ("section:flows", "Flows"),
@@ -43,6 +44,23 @@ SECTIONS = (
     ("section:questions", "Open questions"),
     ("section:out-of-scope", "Out of scope"),
 )
+TAKEAWAY_SECTIONS = (
+    "section:architecture",
+    "section:flows",
+    "section:changes",
+    "section:data-model",
+    "section:contracts",
+    "section:risks",
+)
+TEXT_BLOCKS = ("p", "li", "dt", "dd", "td", "th", "aside", "blockquote", "summary", "figcaption")
+DECISION_TITLE_WORDS = 12
+DECISION_REASON_WORDS = 40
+SENTENCE_WORDS = 30
+FIRST_DIAGRAM_NODES = 12
+SENTENCE_BREAK = re.compile(r"(?<=[.!?;])\s+")
+FLOWCHART_START = re.compile(r"^\s*(?:%%.*\n\s*)*(?:flowchart|graph)\b")
+MERMAID_STRING = re.compile(r'"[^"\n]*"')
+FLOWCHART_NODE = re.compile(r"(?<!subgraph )(?<![\w-])([A-Za-z_][\w-]*)\s*[\[({]")
 PORT_BASE = 47000
 PORT_SPAN = 1000
 MAX_REQUEST_BYTES = 1_000_000
@@ -161,11 +179,28 @@ def load_page(path):
     return text, parsed[0], parsed[1]
 
 
+def words_in(parts):
+    return " ".join("".join(parts).split())
+
+
+def opening(text, size=8):
+    words = text.split()
+    return " ".join(words[:size]) + ("…" if len(words) > size else "")
+
+
+def flowchart_nodes(source):
+    if not FLOWCHART_START.match(source):
+        return 0
+    return len(set(FLOWCHART_NODE.findall(MERMAID_STRING.sub('""', source))))
+
+
 class SourceScanner(HTMLParser):
-    def __init__(self):
+    def __init__(self, first_line=1):
         super().__init__(convert_charrefs=True)
+        self.line_offset = first_line - 1
         self.anchors = []
         self.problems = []
+        self.warnings = []
         self.title_parts = []
         self.titles = 0
         self.inside_title = False
@@ -174,11 +209,97 @@ class SourceScanner(HTMLParser):
         self.open_sections = []
         self.closed_sections = []
         self.heading_parts = None
+        self.text_blocks = []
+        self.span_depth = 0
+        self.pre_depth = 0
+        self.decision = None
+        self.diagram = None
+
+    def warn(self, line, message):
+        self.warnings.append(f"line {line}: {message}")
+
+    def check_takeaway(self, tag, classes):
+        section = self.open_sections[-1] if self.open_sections else None
+        if not section or not section.get("awaits_takeaway"):
+            return
+        section["awaits_takeaway"] = False
+        if tag != "p" or "takeaway" not in classes:
+            self.warn(section["line"], f'section {section["anchor"]} needs <p class="takeaway"> right after its <h2>: its conclusion in one sentence')
+
+    def open_text_block(self, tag, classes, anchor, line):
+        if tag in TEXT_BLOCKS or (tag == "span" and "note" in classes):
+            self.text_blocks.append({"tag": tag, "line": line, "parts": [], "span_depth": self.span_depth, "decision": (anchor or "").startswith("decision:")})
+
+    def close_text_block(self, tag):
+        top = self.text_blocks[-1] if self.text_blocks else None
+        if tag == "span":
+            if top and top["tag"] == "span" and top["span_depth"] == self.span_depth:
+                self.check_sentences(self.text_blocks.pop())
+            return
+        positions = [index for index, block in enumerate(self.text_blocks) if block["tag"] == tag]
+        if not positions:
+            return
+        while len(self.text_blocks) > positions[-1]:
+            self.check_sentences(self.text_blocks.pop())
+
+    def check_sentences(self, block):
+        if block["decision"]:
+            return
+        for sentence in SENTENCE_BREAK.split(words_in(block["parts"])):
+            size = len(sentence.split())
+            if size > SENTENCE_WORDS:
+                self.warn(block["line"], f'a sentence of {size} words, over {SENTENCE_WORDS}: "{opening(sentence)}"; split it into short sentences')
+
+    def track_decision(self, tag, anchor, line):
+        if tag == "li" and (anchor or "").startswith("decision:"):
+            self.decision = {"anchor": anchor, "line": line, "title": [], "reason": [], "part": None}
+        elif self.decision and tag == "strong" and not self.decision["title"]:
+            self.decision["part"] = "title"
+        elif self.decision and tag == "p":
+            self.decision["part"] = "reason"
+
+    def end_decision(self, tag):
+        if not self.decision:
+            return
+        if (tag, self.decision["part"]) in (("strong", "title"), ("p", "reason")):
+            self.decision["part"] = None
+        elif tag == "li":
+            self.check_decision(self.decision)
+            self.decision = None
+
+    def check_decision(self, decision):
+        title = len(words_in(decision["title"]).split())
+        reason = len(words_in(decision["reason"]).split())
+        if title > DECISION_TITLE_WORDS:
+            self.warn(decision["line"], f"{decision['anchor']} states the decision in {title} words, over {DECISION_TITLE_WORDS}; keep the decision and move its mechanics to the section that owns them")
+        if reason > DECISION_REASON_WORDS:
+            self.warn(decision["line"], f"{decision['anchor']} gives its reason in {reason} words, over {DECISION_REASON_WORDS}; keep the why in one or two sentences and move the how to the section that owns it")
+
+    def start_diagram(self, anchor, line):
+        section = self.open_sections[-1] if self.open_sections else None
+        first = bool(section) and not section.get("diagrams")
+        if section:
+            section["diagrams"] = section.get("diagrams", 0) + 1
+        self.diagram = {"anchor": anchor, "line": line, "parts": [], "first": first}
+
+    def end_diagram(self):
+        diagram, self.diagram = self.diagram, None
+        nodes = flowchart_nodes("".join(diagram["parts"]))
+        if diagram["first"] and nodes > FIRST_DIAGRAM_NODES:
+            self.warn(diagram["line"], f"{diagram['anchor']} opens its section with {nodes} nodes, over {FIRST_DIAGRAM_NODES}; open with an overview of 8 nodes or fewer and put this diagram after it")
 
     def handle_starttag(self, tag, attrs):
         attributes = dict(attrs)
         anchor = attributes.get("data-anchor")
-        line = self.getpos()[0]
+        classes = (attributes.get("class") or "").split()
+        line = self.getpos()[0] + self.line_offset
+        self.check_takeaway(tag, classes)
+        self.open_text_block(tag, classes, anchor, line)
+        self.track_decision(tag, anchor, line)
+        if tag == "span":
+            self.span_depth += 1
+        elif tag == "pre":
+            self.pre_depth += 1
         if anchor is not None:
             if anchor == "page":
                 self.problems.append(f'line {line}: data-anchor="page" is reserved for the page itself')
@@ -203,6 +324,7 @@ class SourceScanner(HTMLParser):
             self.heading_parts = []
         elif tag == "script" and attributes.get("type") == MERMAID_TYPE:
             self.diagrams += 1
+            self.start_diagram(anchor, line)
             if not anchor:
                 self.problems.append(f'line {line}: diagram needs data-anchor="diagram:<key>"')
         elif tag == "script":
@@ -211,12 +333,23 @@ class SourceScanner(HTMLParser):
             self.problems.append(f'line {line}: write diagrams as <script type="{MERMAID_TYPE}">, not <pre class="mermaid">')
 
     def handle_endtag(self, tag):
+        if tag == "span":
+            self.span_depth = max(0, self.span_depth - 1)
+        elif tag == "pre":
+            self.pre_depth = max(0, self.pre_depth - 1)
+        elif tag == "script" and self.diagram:
+            self.end_diagram()
+        self.close_text_block(tag)
+        self.end_decision(tag)
         if tag == "h1":
             self.inside_title = False
         elif tag == "h2" and self.heading_parts is not None:
-            self.open_sections[-1]["heading"] = " ".join("".join(self.heading_parts).split())
+            section = self.open_sections[-1]
+            section["heading"] = " ".join("".join(self.heading_parts).split())
+            section["awaits_takeaway"] = section["anchor"] in TAKEAWAY_SECTIONS
             self.heading_parts = None
         elif tag == "section" and self.open_sections:
+            self.check_takeaway("section", [])
             section = self.open_sections.pop()
             if section["heading"] is None:
                 self.problems.append(f"line {section['line']}: section {section['anchor']} needs an <h2> heading")
@@ -228,14 +361,21 @@ class SourceScanner(HTMLParser):
             self.title_parts.append(data)
         if self.heading_parts is not None:
             self.heading_parts.append(data)
+        if self.diagram:
+            self.diagram["parts"].append(data)
+            return
+        if self.decision and self.decision["part"]:
+            self.decision[self.decision["part"]].append(data)
+        if self.text_blocks and not self.pre_depth:
+            self.text_blocks[-1]["parts"].append(data)
 
     @property
     def title(self):
         return " ".join("".join(self.title_parts).split())
 
 
-def scan(content):
-    scanner = SourceScanner()
+def scan(content, first_line=1):
+    scanner = SourceScanner(first_line)
     scanner.feed(content)
     scanner.close()
     return scanner
@@ -251,6 +391,13 @@ def content_problems(scanner):
         problems.append('the content needs at least one <section data-anchor="section:<key>">')
     problems.extend(section_problems(scanner.closed_sections))
     return problems
+
+
+def content_warnings(scanner):
+    warnings = list(scanner.warnings)
+    if scanner.sections and not any(section["anchor"] == "section:summary" for section in scanner.closed_sections):
+        warnings.append('the content needs <section data-anchor="section:summary"> first: what changes, for a reader who reads nothing else')
+    return warnings
 
 
 def section_problems(sections):
@@ -293,11 +440,15 @@ def build(args):
                 "script after it is broken; restore them so the content and comments can be found"
             )
         content, document = (parsed[0].group("content"), parsed[1]) if parsed else (text, {"version": 1, "comments": []})
-        scanner = scan(content)
+        first_line = text.count("\n", 0, parsed[0].start("content")) + 1 if parsed else 1
+        scanner = scan(content, first_line)
         problems = content_problems(scanner)
+        warnings = content_warnings(scanner)
+        for problem in problems:
+            print(f"problem: {problem}", file=sys.stderr)
+        for warning in warnings:
+            print(f"warning: {warning}", file=sys.stderr)
         if problems:
-            for problem in problems:
-                print(f"problem: {problem}", file=sys.stderr)
             print(f"{len(problems)} problem(s) in {path}; the file was left unchanged", file=sys.stderr)
             return 1
         page, build_id = render_page(content, document, scanner.title, feature_slug(path), args.lang)
@@ -307,6 +458,7 @@ def build(args):
     print(f"title: {scanner.title}")
     print(f"sections: {scanner.sections}, anchors: {len(scanner.anchors)}, diagrams: {scanner.diagrams}")
     print(f"comments: {len(document['comments'])} ({open_comments} open)")
+    print(f"warnings: {len(warnings)}" + ("; rewrite the text each warning names and build again" if warnings else ""))
     print(f"build: {build_id}")
     running = running_server(path)
     print(f"server: {running['url']} (an open page reloads by itself)" if running else "server: not running; start it with the serve command")
