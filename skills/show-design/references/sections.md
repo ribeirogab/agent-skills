@@ -15,7 +15,7 @@ The reader knows the product and the goal of the plan, but not this code. They r
 
 ## Markup contract
 
-The design content is an HTML fragment: the first build wraps it into the page template, which supplies the styles, the table of contents, the change legends, the folding of tree directories, the glossary hints, the diagram viewer, Mermaid, and the comment layer. Write content markup only, with the components below; `<html>`, `<head>`, `<body>`, `<main>`, and scripts other than diagrams belong to the template.
+The design content is an HTML fragment: the first build wraps it into the page template, which supplies the styles, the table of contents, the change legends, the labels over the glossary and the decisions, the folding of tree directories, the glossary hints, the diagram viewer, Mermaid, and the comment layer. Write content markup only, with the components below; `<html>`, `<head>`, `<body>`, `<main>`, and scripts other than diagrams belong to the template.
 
 - Open with one `<h1>` (the design title, which also titles the page) and one `<p class="lede">` that states the change in one or two plain sentences.
 - Wrap each section in `<section data-anchor="section:<key>">` with one `<h2>` heading in English: the exact heading listed below for a base section (the build checks those), or a short English heading for a section you add. Write everything else in the language of the conversation with the user.

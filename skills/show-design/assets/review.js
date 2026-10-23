@@ -158,6 +158,19 @@ function wrapTables() {
 }
 
 const CHANGE_MARKS = { added: "+", changed: "~", removed: "−", moved: "→" };
+const BLOCK_LABELS = [
+  ["dl.terms", "Terms"],
+  ["ol.decisions", "Decisions"],
+];
+
+function addBlockLabels() {
+  for (const [selector, label] of BLOCK_LABELS) {
+    for (const block of design.querySelectorAll(selector)) {
+      if (block.previousElementSibling?.matches("h3, .block-label")) continue;
+      block.before(element("p", { class: "sd-ui block-label", text: label }));
+    }
+  }
+}
 
 function addChangeLegends() {
   for (const section of sections()) {
@@ -1264,6 +1277,7 @@ function bindUi() {
 async function boot() {
   wrapTables();
   highlightCode();
+  addBlockLabels();
   addChangeLegends();
   markTerms();
   enhanceTrees();

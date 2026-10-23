@@ -436,6 +436,28 @@ button {
   gap: 6px 18px;
 }
 
+.design .block-label {
+  margin: 36px 0 10px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.design h2 + .block-label,
+.design .takeaway + .block-label {
+  margin-top: 0;
+}
+
+.block-label + .terms {
+  margin-top: 0;
+}
+
+.decisions {
+  border-top: 1px solid var(--border);
+}
+
 .terms dt {
   font-weight: 600;
 }
