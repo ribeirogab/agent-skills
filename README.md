@@ -1,28 +1,32 @@
 # agent-skills
 
-My personal collection of [Agent Skills](https://agentskills.io) — self-contained folders of instructions and resources that AI agents load on demand to perform specialized tasks.
+A small set of [Agent Skills](https://agentskills.io) for AI coding agents: plan a change, show how a product works, and set a clear goal.
 
 ## Skills
 
-| Skill | Description |
+| Skill | What it does |
 | --- | --- |
-| [show-design](skills/show-design/SKILL.md) | Builds a single-file HTML technical design of a planned change (plain-language summary, architecture, flows, change tree, ERD, contracts) that the user reviews with anchored comments before the spec is written. It opens with a lesson and quiz on the whole design, and answers explanation requests with step-by-step lessons; the build warns about text that is hard to read, and the file then serves as implementation context. |
-| [how-it-works](skills/how-it-works/SKILL.md) | Builds a single-file HTML page that shows how a feature, a user flow, or a whole product works, screen by screen: real screenshots in a carousel, plain-language steps, and the rules, in the show-design look. The build embeds the screens and warns about text that is hard to read and images that are too heavy. |
-| [goal-prompt](skills/goal-prompt/SKILL.md) | Writes a `/goal` prompt from an issue link or a slice of the conversation. Asks rounds of questions with recommended answers, including the finish line (local, PR, staging, or production), then returns an end state with binary, provable criteria. |
+| [show-design](skills/show-design/SKILL.md) | Turns a planned change into an HTML design doc with diagrams, the file tree, and the data model. You review it with inline comments before you write the spec. |
+| [how-it-works](skills/how-it-works/SKILL.md) | Builds an HTML walkthrough of a feature, a user flow, or a whole product, screen by screen, from real screenshots. |
+| [goal-prompt](skills/goal-prompt/SKILL.md) | Asks a few questions about an issue or a conversation, then writes a `/goal` prompt with done criteria you can check. |
 
-## Installation
-
-Works with 20+ agents — Claude Code, Codex, Cursor, Gemini CLI, GitHub Copilot, and more:
+## Install
 
 ```bash
 npx skills add ribeirogab/agent-skills
 ```
 
-To install a single skill:
+Install one skill:
 
 ```bash
 npx skills add ribeirogab/agent-skills --skill show-design
 ```
+
+Works with Claude Code, Codex, Cursor, Gemini CLI, GitHub Copilot, and other agents that support Agent Skills. `show-design` and `how-it-works` need Python 3.
+
+## Usage
+
+Your agent uses a skill when your request matches it. To call one by name, type `/show-design` in Claude Code or `$show-design` in Codex. `goal-prompt` runs only when you call it.
 
 ## License
 
