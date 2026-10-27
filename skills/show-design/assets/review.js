@@ -3,6 +3,7 @@ const POLL_INTERVAL = 2000;
 const NODE_SELECTOR = "g.node, g.cluster, g.edgeLabel, g.note, rect.actor, text.actor, text.messageText, text.noteText";
 const BLOCK_SELECTOR = "td, th, li, p, h1, h2, h3, h4, dt, dd, pre, blockquote, aside, summary, .card";
 const TERM_SKIP = "code, pre, script, h1, h2, h3, dl.terms, summary, a, .term, .sd-ui";
+const MARK_SKIP = "script, figure, .sd-ui, .ask-mark, .lesson-term";
 const TERM_TIP_WIDTH = 380;
 const NAMED_KINDS = new Set(["file", "component", "entity", "column", "table", "contract", "event", "job"]);
 const MIN_ZOOM = 0.1;
@@ -14,13 +15,21 @@ const backdrop = document.getElementById("drawer-backdrop");
 const drawerList = document.getElementById("drawer-list");
 const drawerMode = document.getElementById("drawer-mode");
 const modeButton = document.getElementById("comment-mode");
+const explainButton = document.getElementById("explain-mode");
 const listButton = document.getElementById("comments-list");
+const lessonsButton = document.getElementById("lessons-list");
 const themeButton = document.getElementById("theme-toggle");
+const reader = document.getElementById("reader");
+const readerResize = document.getElementById("reader-resize");
+const selectionChip = document.getElementById("selection-chip");
 const THEME_KEY = "show-design:theme";
 const SUN = "M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM8 1.5V3M8 13v1.5M1.5 8H3M13 8h1.5M3.4 3.4l1 1M11.6 11.6l1 1M3.4 12.6l1-1M11.6 4.4l1-1";
 const MOON = "M13 9.6A5.5 5.5 0 0 1 6.4 3a5.5 5.5 0 1 0 6.6 6.6z";
 const { slug, build } = document.body.dataset;
 const storageKey = `show-design:${slug}:comments`;
+const lessonsKey = `show-design:${slug}:lessons`;
+const READER_WIDTH_KEY = "show-design:reader-width";
+const READER_WIDTH = 560;
 const scrollKey = `show-design:${slug}:scroll`;
 const isMac = /Mac|iPhone|iPad/.test(navigator.platform);
 const pinLayer = element("div", { class: "sd-ui pin-layer" });
@@ -30,7 +39,11 @@ const state = {
   comments: [],
   commentsVersion: null,
   filter: "open",
-  commenting: false,
+  mode: null,
+  lessons: [],
+  nav: null,
+  selection: null,
+  askMarks: new Map(),
   popover: null,
   hovered: null,
   focused: null,
@@ -313,7 +326,19 @@ const CODE_RULES = [
   ["punctuation", /[{}[\]();,.:]/y],
 ];
 
-function tokenize(source) {
+const SQL_KEYWORDS = "select|from|where|join|left|right|inner|outer|full|cross|on|as|group|by|order|having|limit|offset|distinct|union|all|with|create|or|replace|view|materialized|table|index|unique|concurrently|drop|alter|add|column|constraint|primary|foreign|key|references|default|not|null|and|is|in|exists|between|like|insert|into|values|update|set|delete|returning|case|when|then|else|end|refresh|begin|commit|true|false";
+const SQL_RULES = [
+  ["comment", /--[^\n]*|\/\*[\s\S]*?\*\//y],
+  ["string", /'(?:''|[^'])*'/y],
+  ["keyword", new RegExp(`\\b(?:${SQL_KEYWORDS})\\b`, "iy")],
+  ["type", /[A-Za-z_]\w*(?=\s*\()/y],
+  ["property", /(?<=\.)[A-Za-z_]\w*/y],
+  ["number", /\b\d+(?:\.\d+)?\b/y],
+  ["operator", /<>|!=|<=|>=|\|\||::|[=<>+\-*\/%]/y],
+  ["punctuation", /[(),;.]/y],
+];
+
+function tokenize(source, rules = CODE_RULES) {
   const nodes = [];
   let plain = "";
   let position = 0;
@@ -323,7 +348,7 @@ function tokenize(source) {
   };
   while (position < source.length) {
     let token = null;
-    for (const [kind, pattern] of CODE_RULES) {
+    for (const [kind, pattern] of rules) {
       pattern.lastIndex = position;
       const match = pattern.exec(source);
       if (match?.[0]) {
@@ -347,13 +372,13 @@ function tokenize(source) {
 function highlightCode() {
   for (const code of design.querySelectorAll("pre > code")) {
     if (code.dataset.highlighted || /\blanguage-(?:text|plain)\b/.test(code.className)) continue;
-    code.replaceChildren(...tokenize(code.textContent));
+    code.replaceChildren(...tokenize(code.textContent, /\blanguage-sql\b/.test(code.className) ? SQL_RULES : CODE_RULES));
     code.dataset.highlighted = "true";
   }
 }
 
 function sections() {
-  return [...design.querySelectorAll("section[data-anchor]")];
+  return [...design.querySelectorAll("section[data-anchor]:not(.lesson)")];
 }
 
 const escapeRegExp = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -378,22 +403,32 @@ function glossary() {
     .sort((a, b) => b.name.length - a.name.length);
 }
 
-function textNodes(root) {
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, { acceptNode: (node) => (node.parentElement?.closest(TERM_SKIP) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT) });
+function textNodes(root, skip) {
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, { acceptNode: (node) => (node.parentElement?.closest(skip) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT) });
   const nodes = [];
   while (walker.nextNode()) nodes.push(walker.currentNode);
   return nodes;
 }
 
-function markFirstUse(root, term) {
-  for (const node of textNodes(root)) {
-    const match = term.pattern.exec(node.data);
+function wrapFirst(root, pattern, build, skip = MARK_SKIP) {
+  for (const node of textNodes(root, skip)) {
+    const match = pattern.exec(node.data);
     if (!match) continue;
     const word = node.splitText(match.index);
     word.splitText(match[0].length);
-    word.replaceWith(element("span", { class: "term", tabindex: 0, "data-definition": term.meaning, text: word.data }));
-    return;
+    const wrapper = build(word.data);
+    word.replaceWith(wrapper);
+    return wrapper;
   }
+  return null;
+}
+
+function phrasePattern(phrase) {
+  return new RegExp(`(?<![\\p{L}\\p{N}_])${escapeRegExp(collapse(phrase)).replace(/ /g, "\\s+")}(?![\\p{L}\\p{N}_])`, "iu");
+}
+
+function markFirstUse(root, term) {
+  wrapFirst(root, term.pattern, (text) => element("span", { class: "term", tabindex: 0, "data-definition": term.meaning, text }), TERM_SKIP);
 }
 
 function placeTermTip(event) {
@@ -637,8 +672,12 @@ function screenPoint(comment, frame) {
   return { x: box.left + point.x * box.width, y: box.top + point.y * box.height, visible: box.width > 0 || box.height > 0 };
 }
 
+const isRequest = (comment) => comment.kind === "explain";
+const reviewComments = () => state.comments.filter((comment) => !isRequest(comment));
+const openRequests = () => state.comments.filter((comment) => isRequest(comment) && comment.status !== "resolved");
+
 function numbered() {
-  return [...state.comments].sort((a, b) => String(a.createdAt).localeCompare(String(b.createdAt))).map((comment, index) => ({ comment, number: index + 1 }));
+  return reviewComments().sort((a, b) => String(a.createdAt).localeCompare(String(b.createdAt))).map((comment, index) => ({ comment, number: index + 1 }));
 }
 
 function matchesFilter(comment) {
@@ -651,25 +690,31 @@ function placePin(pin, x, y, fixed) {
   pin.style.top = `${fixed ? y : y + scrollY}px`;
 }
 
+function addPin(comment, text, className, label) {
+  const target = frameFor(comment);
+  if (!target) return;
+  const frame = shownFrame(target);
+  const inViewer = Boolean(state.viewer?.stage.contains(frame));
+  const { x, y, visible } = screenPoint(comment, frame);
+  if (!visible) return;
+  const pin = element("button", { class: `pin ${className}`, type: "button", text, title: truncate(collapse(comment.body), 80), "aria-label": label, dataset: { id: comment.id } });
+  pin.classList.toggle("active", state.popover?.dataset.id === comment.id);
+  pin.addEventListener("click", (event) => {
+    event.stopPropagation();
+    openThread(comment);
+  });
+  placePin(pin, inViewer ? x : clamp(x, 0, document.documentElement.clientWidth - 24), y, inViewer);
+  (inViewer ? state.viewer.pins : pinLayer).append(pin);
+}
+
 function renderPins() {
   pinLayer.replaceChildren();
   state.viewer?.pins.replaceChildren();
   for (const { comment, number } of numbered()) {
-    if (!matchesFilter(comment)) continue;
-    const target = frameFor(comment);
-    if (!target) continue;
-    const frame = shownFrame(target);
-    const inViewer = Boolean(state.viewer?.stage.contains(frame));
-    const { x, y, visible } = screenPoint(comment, frame);
-    if (!visible) continue;
-    const pin = element("button", { class: `pin ${comment.status === "resolved" ? "resolved" : "open"}`, type: "button", text: String(number), title: truncate(collapse(comment.body), 80), "aria-label": `Comment ${number}`, dataset: { id: comment.id } });
-    pin.classList.toggle("active", state.popover?.dataset.id === comment.id);
-    pin.addEventListener("click", (event) => {
-      event.stopPropagation();
-      openThread(comment, number);
-    });
-    placePin(pin, x, y, inViewer);
-    (inViewer ? state.viewer.pins : pinLayer).append(pin);
+    if (matchesFilter(comment)) addPin(comment, String(number), comment.status === "resolved" ? "resolved" : "open", `Comment ${number}`);
+  }
+  for (const request of openRequests()) {
+    if (!state.askMarks.get(request.id)?.isConnected) addPin(request, "?", "ask", "Explanation request");
   }
 }
 
@@ -697,6 +742,7 @@ function closePopover() {
   state.popover?.remove();
   state.popover = null;
   for (const draft of document.querySelectorAll(".pin.draft")) draft.remove();
+  document.body.classList.remove("explain-draft");
   setHighlight("focus", null);
   renderPins();
   if (state.staleBuild) showBanner();
@@ -749,27 +795,30 @@ function closeOnEscape(card) {
   });
 }
 
-function openComposer(target, clientX, clientY) {
+function openComposer(target, clientX, clientY, kind = state.mode ?? "comment") {
   closePopover();
+  const explain = kind === "explain";
   const location = locate(target.anchor);
   const range = getSelection()?.rangeCount ? getSelection().getRangeAt(0) : null;
   const selection = range && target.frame.contains(range.commonAncestorContainer) ? collapse(range.toString()) : "";
   const quote = selection ? truncate(selection, 400) : target.quote;
   const point = pointIn(target.frame, clientX, clientY);
-  const { form, textarea } = inputBox("Add a comment", async (body) => {
+  const { form, textarea } = inputBox(explain ? "What do you want to understand?" : "Add a comment", async (body) => {
     try {
-      await state.store.create({ anchor: target.anchor, location, quote, body, point: { ...point, block: target.block } });
+      await state.store.create({ anchor: target.anchor, location, quote, body, point: { ...point, block: target.block }, ...(explain ? { kind } : {}) });
       closePopover();
+      getSelection()?.removeAllRanges();
       await refreshComments();
       return true;
     } catch (error) {
-      toast(`Comment not saved: ${error.message}`);
+      toast(`${explain ? "Request" : "Comment"} not saved: ${error.message}`);
       return false;
     }
   });
-  const card = element("div", { class: "sd-ui popover compact", role: "dialog", "aria-label": `New comment on ${location}`, dataset: { kind: "composer" } }, form);
+  const card = element("div", { class: `sd-ui popover compact${explain ? " explain" : ""}`, role: "dialog", "aria-label": `${explain ? "New explanation request" : "New comment"} on ${location}`, dataset: { kind: "composer" } }, form);
   closeOnEscape(card);
-  const draft = element("span", { class: "sd-ui pin draft", text: "+" });
+  document.body.classList.toggle("explain-draft", explain);
+  const draft = element("span", { class: `sd-ui pin draft${explain ? " ask" : ""}`, text: explain ? "?" : "+" });
   (target.fixed ? state.viewer.overlay : document.body).append(card);
   placePin(draft, clientX, clientY, target.fixed);
   (target.fixed ? state.viewer.pins : pinLayer).append(draft);
@@ -802,7 +851,14 @@ async function mutate(action, after) {
   }
 }
 
-function openThread(comment, number) {
+function threadTitle(comment) {
+  const location = comment.location || comment.anchor;
+  if (isRequest(comment)) return `? · ${location} · ${comment.lesson ? "answered" : comment.status === "resolved" ? "resolved" : "waiting for a lesson"}`;
+  const number = numbered().find((entry) => entry.comment.id === comment.id)?.number;
+  return `#${number} · ${location}${comment.status === "resolved" ? " · resolved" : ""}`;
+}
+
+function openThread(comment) {
   closePopover();
   const frame = frameFor(comment);
   if (!frame) return;
@@ -830,9 +886,12 @@ function openThread(comment, number) {
         }
       })
     : null;
-  const card = element("div", { class: "sd-ui popover thread-card", role: "dialog", "aria-label": `Comment ${number}`, dataset: { id: comment.id } }, [
-    element("div", { class: "popover-head" }, [element("div", { class: "popover-location", text: `#${number} · ${comment.location || comment.anchor}${resolved ? " · resolved" : ""}` }), ...tools, ghostButton("Close", CLOSE, closePopover)]),
+  const lesson = comment.lesson ? lessonByAnchor(comment.lesson) : null;
+  const openLessonButton = lesson ? element("button", { class: "button open-lesson", type: "button", onclick: () => openLesson(lesson) }, [element("span", { class: "button-icon", html: icon(BOOK) }), "Open lesson"]) : null;
+  const card = element("div", { class: `sd-ui popover thread-card${isRequest(comment) ? " explain" : ""}`, role: "dialog", "aria-label": isRequest(comment) ? "Explanation request" : "Comment", dataset: { id: comment.id } }, [
+    element("div", { class: "popover-head" }, [element("div", { class: "popover-location", text: threadTitle(comment) }), ...tools, ghostButton("Close", CLOSE, closePopover)]),
     element("div", { class: "thread" }, messages.map(messageView)),
+    openLessonButton,
     reply?.form ?? null,
   ]);
   closeOnEscape(card);
@@ -845,8 +904,8 @@ function openThread(comment, number) {
 }
 
 function reopenThread(id) {
-  const entry = numbered().find(({ comment }) => comment.id === id);
-  if (entry) openThread(entry.comment, entry.number);
+  const comment = state.comments.find((candidate) => candidate.id === id);
+  if (comment) openThread(comment);
 }
 
 function revealComment(comment) {
@@ -870,9 +929,10 @@ function setFilter(filter) {
 }
 
 function renderDrawer() {
-  const open = state.comments.filter((comment) => comment.status !== "resolved");
+  const comments = reviewComments();
+  const open = comments.filter((comment) => comment.status !== "resolved");
   for (const node of document.querySelectorAll('[data-count="open"]')) node.textContent = String(open.length);
-  for (const node of document.querySelectorAll('[data-count="resolved"]')) node.textContent = String(state.comments.length - open.length);
+  for (const node of document.querySelectorAll('[data-count="resolved"]')) node.textContent = String(comments.length - open.length);
   for (const tab of drawer.querySelectorAll("[data-filter]")) tab.setAttribute("aria-selected", String(tab.dataset.filter === state.filter));
   const items = numbered().filter(({ comment }) => matchesFilter(comment));
   drawerList.replaceChildren(
@@ -911,18 +971,27 @@ function setDrawer(open) {
   else if (drawer.contains(document.activeElement)) listButton.focus({ preventScroll: true });
 }
 
-function setCommenting(on) {
-  state.commenting = on;
-  document.body.classList.toggle("commenting", on);
-  modeButton.setAttribute("aria-pressed", String(on));
+const MODE_HINTS = { comment: "Click anywhere to comment · Esc to stop", explain: "Click or select what you want explained · Esc to stop" };
+
+function setMode(mode) {
+  state.mode = mode;
+  document.body.classList.toggle("commenting", Boolean(mode));
+  document.body.classList.toggle("explaining", mode === "explain");
+  modeButton.setAttribute("aria-pressed", String(mode === "comment"));
+  explainButton.setAttribute("aria-pressed", String(mode === "explain"));
   document.querySelector(".mode-hint")?.remove();
-  if (on) document.body.append(element("div", { class: "sd-ui mode-hint", text: "Click anywhere to comment · Esc to stop" }));
+  if (mode) document.body.append(element("div", { class: "sd-ui mode-hint", text: MODE_HINTS[mode] }));
   else setHighlight("hover", null);
+  hideSelectionChip();
   syncViewerToggle();
 }
 
+function toggleMode(mode) {
+  setMode(state.mode === mode ? null : mode);
+}
+
 function onPointerMove(event) {
-  if (!state.commenting || state.popover || state.viewer?.dragging) return setHighlight("hover", null);
+  if (!state.mode || state.popover || state.viewer?.dragging) return setHighlight("hover", null);
   const target = resolveTarget(event.target, { x: event.clientX, y: event.clientY });
   setHighlight("hover", target?.highlight ?? null);
 }
@@ -942,7 +1011,7 @@ function closeFromOutside(event, target) {
     return true;
   }
   closePopover();
-  if (state.commenting && target) consume(event);
+  if (state.mode && target) consume(event);
   return true;
 }
 
@@ -953,7 +1022,7 @@ function onClick(event) {
     return;
   }
   const hit = state.viewer ? document.elementFromPoint(event.clientX, event.clientY) : event.target;
-  const target = state.commenting ? resolveTarget(hit, { x: event.clientX, y: event.clientY }) : null;
+  const target = state.mode ? resolveTarget(hit, { x: event.clientX, y: event.clientY }) : null;
   if (closeFromOutside(event, target) || !target) return;
   consume(event);
   setHighlight("hover", null);
@@ -1015,7 +1084,7 @@ function openViewer(figure) {
   const zoomLabel = element("span", { class: "viewer-zoom", text: "100%" });
   const button = (label, html, onclick) => element("button", { class: "icon-button", type: "button", "data-tip": label, "aria-label": label, html, onclick });
   const center = () => [innerWidth / 2, innerHeight / 2];
-  const commentToggle = button("Comment mode (C)", icon("M2.5 3.5h11v7h-6l-3 2.5v-2.5h-2z"), () => setCommenting(!state.commenting));
+  const commentToggle = button("Comment mode (C)", icon("M2.5 3.5h11v7h-6l-3 2.5v-2.5h-2z"), () => toggleMode("comment"));
   const toolbar = element("div", { class: "sd-ui viewer-toolbar" }, [
     element("span", { class: "viewer-title", text: figure.dataset.caption || figure.dataset.anchor }),
     element("span", { class: "viewer-separator" }),
@@ -1043,8 +1112,8 @@ function openViewer(figure) {
 }
 
 function syncViewerToggle() {
-  state.viewer?.commentToggle.setAttribute("aria-pressed", String(state.commenting));
-  if (state.viewer) state.viewer.commentToggle.style.color = state.commenting ? "var(--accent)" : "";
+  state.viewer?.commentToggle.setAttribute("aria-pressed", String(state.mode === "comment"));
+  if (state.viewer) state.viewer.commentToggle.style.color = state.mode === "comment" ? "var(--accent)" : "";
 }
 
 function closeViewer() {
@@ -1133,16 +1202,421 @@ function bindViewerGestures(overlay) {
   overlay.addEventListener("pointercancel", release);
 }
 
+const BOOK = "M8 4.6C6.7 3.6 4.9 3.2 2.5 3.4v8.8c2.4-.2 4.2.2 5.5 1.2 1.3-1 3.1-1.4 5.5-1.2V3.4c-2.4-.2-4.2.2-5.5 1.2zM8 4.6v8.8";
+const ASK = "M8 14.5a6.5 6.5 0 1 0 0-13 6.5 6.5 0 0 0 0 13zM6.2 6.2a1.9 1.9 0 1 1 2.6 1.8c-.5.2-.8.6-.8 1.1v.5M8 11.4v.1";
+const BACK = "M6 3.5 2.5 7 6 10.5M2.5 7H10a3.5 3.5 0 0 1 0 7H8.5";
+const LIST = "M3 4.5h10M3 8h10M3 11.5h6";
+const PREVIOUS = "M10 3.5 5.5 8l4.5 4.5";
+
+function unwrap(node) {
+  const parent = node.parentNode;
+  node.replaceWith(...[...node.childNodes].filter((child) => !(child instanceof Element && child.matches(".sd-ui"))));
+  parent?.normalize();
+}
+
+function markRequests() {
+  for (const mark of state.askMarks.values()) if (mark.isConnected) unwrap(mark);
+  state.askMarks.clear();
+  for (const request of openRequests()) {
+    const quote = collapse(request.quote);
+    const root = anchorElement(request.anchor);
+    if (!root || !quote || quote.length > 60 || root.closest("section.lesson")) continue;
+    const mark = wrapFirst(root, phrasePattern(quote), (text) => element("span", { class: "ask-mark", tabindex: 0, title: "Waiting for a lesson", dataset: { id: request.id }, text }));
+    if (mark) state.askMarks.set(request.id, mark);
+  }
+}
+
+function onDesignClick(event) {
+  const mark = event.target.closest?.(".ask-mark");
+  if (!mark || state.mode) return;
+  const request = state.comments.find((comment) => comment.id === mark.dataset.id);
+  if (request) openThread(request);
+}
+
+function hideSelectionChip() {
+  selectionChip.hidden = true;
+  state.selection = null;
+}
+
+function syncSelectionChip() {
+  const selection = getSelection();
+  const range = selection?.rangeCount && !selection.isCollapsed ? selection.getRangeAt(0) : null;
+  const text = collapse(range?.toString());
+  const container = range?.commonAncestorContainer;
+  const node = container?.nodeType === Node.ELEMENT_NODE ? container : container?.parentElement;
+  if (!text || text.length > 160 || state.mode || state.popover || !node || !design.contains(node) || node.closest(".sd-ui")) return hideSelectionChip();
+  const box = range.getBoundingClientRect();
+  selectionChip.hidden = false;
+  selectionChip.style.left = `${box.left + box.width / 2 + scrollX}px`;
+  selectionChip.style.top = `${box.top + scrollY}px`;
+  state.selection = { range: range.cloneRange(), node };
+}
+
+function explainSelection(event) {
+  event.stopPropagation();
+  const picked = state.selection;
+  hideSelectionChip();
+  if (!picked) return;
+  const box = picked.range.getBoundingClientRect();
+  const target = resolveTarget(picked.node, { x: box.left, y: box.top });
+  if (target) openComposer(target, box.left, box.bottom, "explain");
+}
+
+function collectLessons() {
+  state.lessons = [...design.querySelectorAll("section.lesson[data-anchor]")].map((section) => ({
+    section,
+    anchor: section.dataset.anchor,
+    title: collapse(section.querySelector(":scope > h2")?.textContent) || section.dataset.anchor,
+    source: section.dataset.lessonFor || "page",
+    term: collapse(section.dataset.lessonTerm),
+    marker: null,
+    views: null,
+  }));
+  for (const node of document.querySelectorAll('[data-count="lessons"]')) node.textContent = String(state.lessons.length);
+}
+
+const lessonByAnchor = (anchor) => state.lessons.find((lesson) => lesson.anchor === anchor);
+const requestFor = (lesson) => state.comments.find((comment) => isRequest(comment) && comment.lesson === lesson.anchor);
+
+function lessonScores() {
+  try {
+    return JSON.parse(localStorage.getItem(lessonsKey) ?? "{}");
+  } catch {
+    return {};
+  }
+}
+
+function saveLessonScore(anchor, score) {
+  try {
+    localStorage.setItem(lessonsKey, JSON.stringify({ ...lessonScores(), [anchor]: score }));
+  } catch {}
+}
+
+function lessonChip(target, lesson) {
+  const chip = element("button", { class: "sd-ui lesson-chip", type: "button", "aria-label": `Lesson: ${lesson.title}`, "data-tip": lesson.title, html: icon(BOOK) });
+  const label = target.matches("figure") ? target.querySelector("figcaption") : target.querySelector(":scope > strong, :scope > h3, :scope > .tree-row > code, :scope > code, :scope > td");
+  (label ?? target).append(chip);
+  return chip;
+}
+
+function markLessons() {
+  const scores = lessonScores();
+  for (const lesson of state.lessons) {
+    if (lesson.source === "page") continue;
+    const target = anchorElement(lesson.source);
+    if (!target) continue;
+    const term = lesson.term ? wrapFirst(target, phrasePattern(lesson.term), (text) => element("span", { class: "lesson-term", tabindex: 0, role: "button", "aria-label": `Lesson: ${lesson.title}` }, [text, element("span", { class: "sd-ui lesson-icon", html: icon(BOOK) })])) : null;
+    lesson.marker = term ?? lessonChip(target, lesson);
+    lesson.marker.classList.toggle("done", Boolean(scores[lesson.anchor]));
+    lesson.marker.addEventListener("click", () => !state.mode && openLesson(lesson));
+    lesson.marker.addEventListener("keydown", (event) => event.key === "Enter" && openLesson(lesson));
+  }
+  addStartCard();
+}
+
+function addStartCard() {
+  const lesson = state.lessons.find((item) => item.source === "page");
+  if (!lesson) return;
+  const card = element("div", { class: "sd-ui lesson-start" });
+  const steps = lessonParts(lesson.section).parts.length;
+  const questions = lesson.section.querySelectorAll("ol.quiz > li").length;
+  lesson.marker = card;
+  lesson.renderCard = () => {
+    const score = lessonScores()[lesson.anchor];
+    card.classList.toggle("done", Boolean(score));
+    card.replaceChildren(
+      element("span", { class: "lesson-start-icon", html: icon(score ? CHECK : BOOK) }),
+      element("span", { class: "lesson-start-text" }, [element("b", { text: lesson.title }), element("span", { text: score ? `Finished · ${score} correct` : `${steps} steps${questions ? ` · ${questions}-question quiz` : ""}` })]),
+      element("button", { class: "button lesson-start-button", type: "button", onclick: () => openLesson(lesson) }, [score ? "Review" : "Start", element("span", { class: "button-icon", html: icon(CHEVRON) })]),
+    );
+  };
+  lesson.renderCard();
+  (design.querySelector(":scope > .lede") ?? design.querySelector(":scope > h1"))?.after(card);
+}
+
+function lessonParts(section) {
+  const intro = [];
+  const parts = [];
+  for (const node of section.children) {
+    if (node.matches("h2")) continue;
+    if (node.matches("h3")) parts.push({ title: collapse(node.textContent), nodes: [] });
+    else (parts.at(-1)?.nodes ?? intro).push(node);
+  }
+  return { intro, parts };
+}
+
+function lessonViews(lesson) {
+  const { intro, parts } = lessonParts(lesson.section);
+  lesson.views ??= parts.map((part) => {
+    const view = element("div", { class: "design reader-body" }, part.nodes.map((node) => node.cloneNode(true)));
+    enhanceQuiz(view, lesson);
+    return view;
+  });
+  return { intro: intro.map((node) => node.cloneNode(true)), parts, views: lesson.views };
+}
+
+function showReader(view) {
+  reader.dataset.view = view;
+  reader.classList.add("open");
+  document.body.classList.add("reading");
+  lessonsButton.setAttribute("aria-expanded", "true");
+  setTimeout(renderPins, 220);
+}
+
+function closeReader() {
+  reader.classList.remove("open");
+  document.body.classList.remove("reading");
+  lessonsButton.setAttribute("aria-expanded", "false");
+  state.nav = null;
+  for (const node of document.querySelectorAll(".lesson-active")) node.classList.remove("lesson-active");
+  setTimeout(renderPins, 220);
+}
+
+function readerHead(children) {
+  return element("div", { class: "reader-head" }, [...children, ghostButton("Close (Esc)", CLOSE, closeReader)]);
+}
+
+function sourceLabel(lesson) {
+  return lesson.source === "page" ? "Whole design" : locate(lesson.source);
+}
+
+function flash(node) {
+  node.classList.remove("flash");
+  void node.offsetWidth;
+  node.classList.add("flash");
+}
+
+function revealLessonSource(lesson) {
+  const target = lesson.source === "page" ? lesson.marker ?? design : anchorElement(lesson.source);
+  if (!target) return;
+  unfold(target);
+  target.scrollIntoView({ block: "center", behavior: "smooth" });
+  flash(target);
+}
+
+function stepButton(title, label, forward, onclick) {
+  return element("button", { class: `step-nav${forward ? " forward" : ""}`, type: "button", onclick }, [
+    forward ? null : element("span", { class: "button-icon", html: icon(PREVIOUS) }),
+    element("span", { class: "step-nav-text" }, [element("small", { text: label }), element("span", { text: title })]),
+    forward ? element("span", { class: "button-icon", html: icon(CHEVRON) }) : null,
+  ]);
+}
+
+function openLesson(lesson, index = 0) {
+  closePopover();
+  setDrawer(false);
+  const { intro, parts, views } = lessonViews(lesson);
+  if (!parts.length) return;
+  const step = clamp(index, 0, parts.length - 1);
+  const go = (target) => target >= 0 && target < parts.length && openLesson(lesson, target);
+  const request = requestFor(lesson);
+  reader.replaceChildren(
+    readerHead([
+      ghostButton("All lessons", LIST, openLessonIndex),
+      element("button", { class: "reader-source", type: "button", onclick: () => revealLessonSource(lesson) }, [element("span", { class: "button-icon", html: icon(BACK) }), sourceLabel(lesson)]),
+    ]),
+    element("div", { class: "reader-scroll" }, [
+      element("h2", { class: "reader-title", text: lesson.title }),
+      element("div", { class: "design reader-intro" }, intro),
+      request ? element("p", { class: "reader-asked", text: `“${request.body}”` }) : null,
+      element(
+        "div",
+        { class: "steps" },
+        parts.map((part, position) => element("button", { class: `step-bar${position < step ? " done" : ""}${position === step ? " current" : ""}`, type: "button", "aria-label": part.title, "data-tip": part.title, onclick: () => go(position) })),
+      ),
+      element("p", { class: "step-title" }, [element("span", { text: `${step + 1}/${parts.length}` }), parts[step].title]),
+      views[step],
+    ]),
+    element("div", { class: "reader-foot" }, [step > 0 ? stepButton(parts[step - 1].title, "Previous", false, () => go(step - 1)) : element("span"), step < parts.length - 1 ? stepButton(parts[step + 1].title, "Next", true, () => go(step + 1)) : element("span")]),
+  );
+  reader.querySelector(".reader-scroll").scrollTop = 0;
+  state.nav = { lesson, step, go };
+  for (const node of document.querySelectorAll(".lesson-active")) node.classList.remove("lesson-active");
+  lesson.marker?.classList.add("lesson-active");
+  showReader("lesson");
+}
+
+function openLessonIndex() {
+  closePopover();
+  const scores = lessonScores();
+  const lessons = state.lessons.map((lesson) =>
+    element("button", { class: "index-item", type: "button", onclick: () => openLesson(lesson) }, [
+      element("span", { class: `index-icon${scores[lesson.anchor] ? " done" : ""}`, html: icon(scores[lesson.anchor] ? CHECK : BOOK) }),
+      element("span", { class: "index-text" }, [element("b", { text: lesson.title }), element("span", { text: scores[lesson.anchor] ? `${sourceLabel(lesson)} · finished · ${scores[lesson.anchor]}` : sourceLabel(lesson) })]),
+    ]),
+  );
+  const waiting = openRequests().map((request) =>
+    element("button", { class: "index-item", type: "button", onclick: () => revealRequest(request) }, [
+      element("span", { class: "pin ask", text: "?" }),
+      element("span", { class: "index-text" }, [element("b", { text: request.body }), element("span", { text: request.location || request.anchor })]),
+    ]),
+  );
+  const ask = () => {
+    if (innerWidth < 1100) closeReader();
+    setMode("explain");
+  };
+  reader.replaceChildren(
+    readerHead([element("span", { class: "reader-kicker", text: "Lessons" })]),
+    element("div", { class: "reader-scroll" }, [
+      lessons.length ? element("div", { class: "index-list" }, lessons) : element("p", { class: "empty", text: "No lessons yet." }),
+      waiting.length ? element("p", { class: "index-label", text: "Waiting" }) : null,
+      waiting.length ? element("div", { class: "index-list" }, waiting) : null,
+    ]),
+    element("div", { class: "reader-foot index-foot" }, [
+      element("button", { class: "button new-request", type: "button", onclick: ask }, [element("span", { class: "button-icon", html: icon(ASK) }), "New request"]),
+      element("span", { class: "index-hint", text: "or select text and press Explain" }),
+    ]),
+  );
+  state.nav = null;
+  showReader("index");
+}
+
+function revealRequest(request) {
+  const mark = state.askMarks.get(request.id);
+  const frame = mark?.isConnected ? mark : frameFor(request);
+  if (!frame?.getClientRects().length) return toast("Waiting for a lesson.");
+  if (innerWidth < 1100) closeReader();
+  unfold(frame);
+  frame.scrollIntoView({ block: "center" });
+  requestAnimationFrame(() => openThread(request));
+}
+
+function enhanceQuiz(root, lesson) {
+  for (const quiz of root.querySelectorAll("ol.quiz")) {
+    const questions = [...quiz.children].filter((node) => node.matches("li"));
+    const result = element("div", { class: "quiz-result", hidden: true });
+    const retry = () => {
+      for (const question of questions) question.resetAnswer?.();
+      result.hidden = true;
+    };
+    const finish = () => {
+      const right = questions.filter((question) => question.dataset.answered === "right").length;
+      const missed = questions.find((question) => question.dataset.answered === "wrong");
+      const score = `${right}/${questions.length}`;
+      const done = element("button", { class: "button quiz-finish", type: "button", onclick: () => completeLesson(lesson, score, done) }, [element("span", { class: "button-icon", html: icon(CHECK) }), "Finish lesson"]);
+      result.replaceChildren(
+        element("p", { class: "quiz-score" }, [element("b", { text: score }), "correct"]),
+        done,
+        element("div", { class: "quiz-actions" }, [
+          missed ? element("button", { class: "button link quiz-follow-up", type: "button", onclick: (event) => askFollowUp(lesson, missed, event.currentTarget) }, [element("span", { class: "button-icon", html: icon(ASK) }), "Ask a follow-up"]) : null,
+          element("button", { class: "button link", type: "button", text: "Try again", onclick: retry }),
+        ]),
+      );
+      result.hidden = false;
+      requestAnimationFrame(() => result.scrollIntoView({ block: "nearest", behavior: "smooth" }));
+    };
+    for (const question of questions) buildQuestion(question, () => questions.every((item) => item.dataset.answered) && finish());
+    quiz.after(result);
+  }
+}
+
+function buildQuestion(question, onAnswer) {
+  const list = question.querySelector(":scope > ul.choices");
+  const why = question.querySelector(":scope > .why");
+  if (!list) return;
+  const verdict = element("b", { class: "quiz-verdict" });
+  why?.prepend(verdict);
+  const choices = [...list.children].map((choice, index) =>
+    element("button", { class: "quiz-choice", type: "button", dataset: { correct: choice.hasAttribute("data-correct") ? "true" : "" } }, [
+      element("span", { class: "quiz-key", text: String.fromCharCode(65 + index) }),
+      element("span", {}, [...choice.childNodes].map((node) => node.cloneNode(true))),
+    ]),
+  );
+  list.replaceWith(element("div", { class: "quiz-choices", role: "group" }, choices));
+  question.resetAnswer = () => {
+    delete question.dataset.answered;
+    for (const choice of choices) {
+      choice.disabled = false;
+      choice.classList.remove("correct", "wrong");
+    }
+    if (why) why.hidden = true;
+  };
+  for (const choice of choices) {
+    choice.addEventListener("click", () => {
+      const right = Boolean(choice.dataset.correct);
+      question.dataset.answered = right ? "right" : "wrong";
+      for (const other of choices) {
+        other.disabled = true;
+        if (other.dataset.correct) other.classList.add("correct");
+      }
+      choice.classList.add(right ? "correct" : "wrong");
+      verdict.textContent = right ? "Correct. " : "Not quite. ";
+      if (why) {
+        why.hidden = false;
+        why.classList.toggle("right", right);
+      }
+      onAnswer();
+    });
+  }
+  question.resetAnswer();
+}
+
+function completeLesson(lesson, score, button) {
+  saveLessonScore(lesson.anchor, score);
+  button.disabled = true;
+  button.replaceChildren(element("span", { class: "button-icon", html: icon(CHECK) }), "Finished");
+  closeReader();
+  lesson.renderCard?.();
+  lesson.marker?.classList.add("done");
+  toast(`Lesson finished · ${score}`);
+  revealLessonSource(lesson);
+}
+
+function askFollowUp(lesson, question, button) {
+  const box = button.getBoundingClientRect();
+  const target = { anchor: lesson.anchor, highlight: null, frame: lesson.section, quote: collapse(question.querySelector(":scope > p")?.textContent), block: "", fixed: false };
+  openComposer(target, box.left, box.bottom, "explain");
+}
+
+function setReaderWidth(value) {
+  const width = clamp(Math.round(value), 420, Math.max(420, Math.min(960, innerWidth - 360)));
+  document.documentElement.style.setProperty("--reader-width", `${width}px`);
+  return width;
+}
+
+function bindReaderResize() {
+  try {
+    const saved = Number(localStorage.getItem(READER_WIDTH_KEY));
+    if (saved) setReaderWidth(saved);
+  } catch {}
+  const save = (width) => {
+    try {
+      localStorage.setItem(READER_WIDTH_KEY, String(width));
+    } catch {}
+    renderPins();
+  };
+  readerResize.addEventListener("pointerdown", (event) => {
+    event.preventDefault();
+    readerResize.setPointerCapture(event.pointerId);
+    document.body.classList.add("resizing");
+  });
+  readerResize.addEventListener("pointermove", (event) => {
+    if (readerResize.hasPointerCapture(event.pointerId)) setReaderWidth(innerWidth - event.clientX);
+  });
+  readerResize.addEventListener("pointerup", (event) => {
+    readerResize.releasePointerCapture(event.pointerId);
+    document.body.classList.remove("resizing");
+    save(setReaderWidth(innerWidth - event.clientX));
+  });
+  readerResize.addEventListener("dblclick", () => save(setReaderWidth(READER_WIDTH)));
+}
+
 function onKeyDown(event) {
   const typing = event.target.closest?.("textarea, input, [contenteditable]");
   if (event.key === "Escape") {
     if (state.popover) return closePopover();
     if (drawer.classList.contains("open")) return setDrawer(false);
     if (state.viewer) return closeViewer();
-    if (state.commenting) return setCommenting(false);
+    if (state.mode) return setMode(null);
+    if (reader.classList.contains("open")) return closeReader();
   }
   if (typing || event.metaKey || event.ctrlKey || event.altKey) return;
-  if (event.key === "c" || event.key === "C") setCommenting(!state.commenting);
+  if (event.key === "c" || event.key === "C") toggleMode("comment");
+  if (event.key === "e" || event.key === "E") toggleMode("explain");
+  if (state.nav && !state.viewer && !event.target.closest?.(".tree-frame") && (event.key === "ArrowRight" || event.key === "ArrowLeft")) {
+    event.preventDefault();
+    return state.nav.go(state.nav.step + (event.key === "ArrowRight" ? 1 : -1));
+  }
   if (!state.viewer) return;
   const center = [innerWidth / 2, innerHeight / 2];
   if (event.key === "+" || event.key === "=") zoomAt(1.25, ...center);
@@ -1155,7 +1629,9 @@ async function refreshComments() {
   const { comments, version } = await state.store.load();
   state.comments = Array.isArray(comments) ? comments : [];
   state.commentsVersion = version;
+  markRequests();
   renderDrawer();
+  if (reader.classList.contains("open") && reader.dataset.view === "index") openLessonIndex();
   const typing = state.popover?.querySelector("textarea")?.value.trim();
   if (!state.popover || state.popover.dataset.kind === "composer" || typing) renderPins();
   else reopenThread(state.popover.dataset.id);
@@ -1224,13 +1700,20 @@ function poll() {
 
 function commentsMarkdown() {
   const open = numbered().filter(({ comment }) => comment.status !== "resolved");
-  if (!open.length) return `No open comments on "${document.title}".`;
+  const requests = openRequests();
+  if (!open.length && !requests.length) return `No open comments on "${document.title}".`;
   const lines = [`Open review comments on "${document.title}" (${slug}):`];
   for (const { comment, number } of open) {
     lines.push("", `- #${number} [${comment.id}] ${comment.location || comment.anchor}`, `  anchor: ${comment.anchor}`);
     if (comment.quote) lines.push(`  quote: ${comment.quote}`);
     lines.push(`  comment: ${comment.body.replace(/\n/g, "\n    ")}`);
     for (const reply of comment.replies ?? []) lines.push(`  ${reply.author}: ${reply.body.replace(/\n/g, "\n    ")}`);
+  }
+  if (requests.length) lines.push("", "Open explanation requests:");
+  for (const request of requests) {
+    lines.push("", `- [${request.id}] ${request.location || request.anchor}`, `  anchor: ${request.anchor}`);
+    if (request.quote) lines.push(`  quote: ${request.quote}`);
+    lines.push(`  request: ${request.body.replace(/\n/g, "\n    ")}`);
   }
   return lines.join("\n");
 }
@@ -1253,7 +1736,18 @@ async function copyComments() {
 
 function bindUi() {
   document.body.append(pinLayer);
-  modeButton.addEventListener("click", () => setCommenting(!state.commenting));
+  modeButton.addEventListener("click", () => toggleMode("comment"));
+  explainButton.addEventListener("click", () => toggleMode("explain"));
+  lessonsButton.addEventListener("click", () => (reader.classList.contains("open") && reader.dataset.view === "index" ? closeReader() : openLessonIndex()));
+  selectionChip.addEventListener("pointerdown", (event) => event.preventDefault());
+  selectionChip.addEventListener("click", explainSelection);
+  design.addEventListener("click", onDesignClick);
+  let selectionTimer = null;
+  document.addEventListener("selectionchange", () => {
+    clearTimeout(selectionTimer);
+    selectionTimer = setTimeout(syncSelectionChip, 140);
+  });
+  bindReaderResize();
   themeButton.addEventListener("click", toggleTheme);
   systemDark.addEventListener("change", () => {
     if (!document.documentElement.dataset.theme) redrawForTheme();
@@ -1281,6 +1775,8 @@ async function boot() {
   addChangeLegends();
   markTerms();
   enhanceTrees();
+  collectLessons();
+  markLessons();
   buildToc();
   bindUi();
   state.store = await chooseStore();

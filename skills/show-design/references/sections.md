@@ -15,10 +15,10 @@ The reader knows the product and the goal of the plan, but not this code. They r
 
 ## Markup contract
 
-The design content is an HTML fragment: the first build wraps it into the page template, which supplies the styles, the table of contents, the change legends, the labels over the glossary and the decisions, the folding of tree directories, the glossary hints, the diagram viewer, Mermaid, and the comment layer. Write content markup only, with the components below; `<html>`, `<head>`, `<body>`, `<main>`, and scripts other than diagrams belong to the template.
+The design content is an HTML fragment: the first build wraps it into the page template, which supplies the styles, the table of contents, the change legends, the labels over the glossary and the decisions, the folding of tree directories, the glossary hints, the diagram viewer, Mermaid, the lesson panel, and the comment layer. Write content markup only, with the components below; `<html>`, `<head>`, `<body>`, `<main>`, and scripts other than diagrams belong to the template.
 
 - Open with one `<h1>` (the design title, which also titles the page) and one `<p class="lede">` that states the change in one or two plain sentences.
-- Wrap each section in `<section data-anchor="section:<key>">` with one `<h2>` heading in English: the exact heading listed below for a base section (the build checks those), or a short English heading for a section you add. Write everything else in the language of the conversation with the user.
+- Wrap each section in `<section data-anchor="section:<key>">` with one `<h2>` heading in English: the exact heading listed below for a base section (the build checks those), or a short English heading for a section you add. A lesson section follows its own markup in [lessons.md](lessons.md), with headings in the language of the conversation. Write everything else in the language of the conversation with the user.
 - Give every element a reviewer could point at a `data-anchor`: each decision, tree entry, table row, diagram, contract, risk, question, and scope item. Other blocks take comments through their section's anchor, with the block text as the quote. `page` is reserved for the page itself. Build anchor values as `<kind>:<key>` from stable names: `decision:d1`, `file:src/orders/status.ts`, `component:OrderStatusBadge`, `entity:Order`, `column:Order.status`, `contract:PATCH /orders/{id}/status`, `diagram:architecture`. Comments attach through anchors, so keep an anchor unchanged across rebuilds while its element keeps its meaning, and give a reworked element a new anchor.
 - Mark change state with `data-change="added|changed|removed|moved|unchanged"` on tree entries, table rows, and cards. The page draws the marker (`+ ~ − →`) and adds a one-line legend under the takeaway, or under the heading, of each section that uses markers.
 - Write each diagram as `<script type="text/x-mermaid" data-anchor="diagram:<key>" data-caption="<one line>">…</script>`, with a caption that states what the diagram shows as a conclusion. The script element keeps `<`, `>`, and `&` literal, so write Mermaid as is.
@@ -34,11 +34,12 @@ The design content is an HTML fragment: the first build wraps it into the page t
 | File or component tree | `<ul class="tree">`; directory `<li class="dir"><code>src/orders/</code><ul>…</ul></li>`; entry `<li data-anchor="file:<path>" data-change="…"><code>name</code><span class="note">responsibility or change</span></li>` |
 | Table | `<table>` with `<thead>`; anchored rows `<tr data-anchor="…" data-change="…">` |
 | Card | `<article class="card" data-anchor="…" data-change="…"><h3>…</h3>…</article>`, with `<pre><code>` for payloads |
-| Code block | `<pre><code>…</code></pre>`; the page colors its syntax (keys, strings, types, comments, HTTP methods). Mark a block that is not code with `<code class="language-text">` |
+| Code block | `<pre><code>…</code></pre>`; the page colors its syntax (keys, strings, types, comments, HTTP methods). Mark SQL with `<code class="language-sql">`, and a block that is not code with `<code class="language-text">` |
 | More detail | `<details class="more"><summary>label</summary>…</details>`, closed until the reader opens it. Never put a diagram, a decision, or anything else the reviewer must see inside it |
 | Callout | `<aside class="callout">`, or `class="callout warning"` for a hazard |
 | Questions | `<ol class="questions">` of `<li data-anchor="question:qN">question<p class="recommendation">recommended answer</p></li>` |
 | Risks | `<ul class="risks">` of `<li data-anchor="risk:rN">risk<p class="mitigation">mitigation</p></li>` |
+| Lesson and quiz | `<section class="lesson" data-anchor="lesson:<key>" data-lesson-for="…">` with an `<ol class="quiz">` at its end, as [lessons.md](lessons.md) describes |
 
 ## Sections
 
@@ -113,3 +114,7 @@ One question per gap found while mapping the plan, each with your recommended an
 ### 10. `section:out-of-scope`, heading `Out of scope`
 
 What this change leaves out, as a plain list with one `scope:<key>` anchor per item.
+
+### 11. Lessons
+
+`lesson:design`, then one lesson per answered explanation request, at the end of the content, as [lessons.md](lessons.md) describes.

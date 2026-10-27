@@ -2,7 +2,7 @@
 
 Read when the user says they left comments on the design page.
 
-The page saves each comment into `design.html` itself, as the embedded `review-comments` JSON, through the design server. The helper reads the comments and writes your replies into the same file, and the open page shows each reply within a few seconds. A page opened without the server keeps new comments in the browser; the user then pastes them into the chat as Markdown, and that paste is the comment list, answered in the chat.
+The page saves each comment into `design.html` itself, as the embedded `review-comments` JSON, through the design server. The helper reads the comments and writes your replies into the same file, and the open page shows each reply within a few seconds. A page opened without the server keeps new comments in the browser; the user then pastes them into the chat as Markdown, and that paste is the comment list, answered in the chat. Explanation requests are not review comments: `comments` leaves them out, and [lessons.md](lessons.md) answers them.
 
 ## 1. Read
 

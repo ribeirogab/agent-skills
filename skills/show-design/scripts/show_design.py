@@ -30,6 +30,11 @@ ASSETS_DIR = Path(__file__).resolve().parent.parent / "assets"
 RUNTIME_DIR = Path(tempfile.gettempdir()) / "show-design"
 CHANGE_KINDS = ("added", "changed", "removed", "moved", "unchanged")
 STATUSES = ("open", "resolved")
+KINDS = ("comment", "explain")
+LESSON_PREFIX = "lesson:"
+DESIGN_LESSON = "lesson:design"
+LESSON_STEPS = 2
+VOID_TAGS = {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track", "wbr"}
 MERMAID_TYPE = "text/x-mermaid"
 FORBIDDEN_TAGS = ("html", "head", "body", "main")
 SECTIONS = (
@@ -214,9 +219,88 @@ class SourceScanner(HTMLParser):
         self.pre_depth = 0
         self.decision = None
         self.diagram = None
+        self.stack = []
+        self.lessons = []
+        self.anchor_text = {}
 
     def warn(self, line, message):
         self.warnings.append(f"line {line}: {message}")
+
+    def innermost_lesson(self):
+        return next((entry["ref"] for entry in reversed(self.stack) if entry["kind"] == "lesson"), None)
+
+    def open_lesson(self, anchor, attributes, classes, line):
+        lesson = {
+            "anchor": anchor or "",
+            "line": line,
+            "for": (attributes.get("data-lesson-for") or "").strip(),
+            "term": (attributes.get("data-lesson-term") or "").strip(),
+            "title": "",
+            "steps": 0,
+            "quizzes": [],
+        }
+        if "lesson" not in classes:
+            self.problems.append(f'line {line}: section {anchor} needs class="lesson"')
+        if not lesson["anchor"].startswith(LESSON_PREFIX):
+            self.problems.append(f'line {line}: a lesson section needs data-anchor="lesson:<key>"')
+        if not lesson["for"]:
+            self.problems.append(f"line {line}: lesson {anchor} needs data-lesson-for with the anchor of the element it explains, or page")
+        if self.open_sections:
+            self.problems.append(f"line {line}: lesson {anchor} sits inside another section; put lessons at the top level, after the base sections")
+        self.lessons.append(lesson)
+        return lesson
+
+    def track_lesson_markup(self, tag, attributes, classes, line, entry):
+        parent = self.stack[-1] if self.stack else {"kind": None, "ref": None}
+        if tag == "h3" and parent["kind"] == "lesson":
+            parent["ref"]["steps"] += 1
+        elif tag == "ol" and "quiz" in classes:
+            entry["kind"], entry["ref"] = "quiz", {"line": line, "questions": []}
+            lesson = self.innermost_lesson()
+            if lesson:
+                lesson["quizzes"].append(entry["ref"])
+            else:
+                self.problems.append(f'line {line}: <ol class="quiz"> belongs inside a lesson section')
+        elif tag == "li" and parent["kind"] == "quiz":
+            entry["kind"], entry["ref"] = "question", {"line": line, "lists": 0, "choices": 0, "correct": 0, "why": 0}
+            parent["ref"]["questions"].append(entry["ref"])
+        elif tag == "ul" and "choices" in classes and parent["kind"] == "question":
+            entry["kind"], entry["ref"] = "choices", parent["ref"]
+            parent["ref"]["lists"] += 1
+        elif tag == "li" and parent["kind"] == "choices":
+            parent["ref"]["choices"] += 1
+            parent["ref"]["correct"] += "data-correct" in attributes
+        elif tag == "p" and "why" in classes and parent["kind"] == "question":
+            parent["ref"]["why"] += 1
+
+    def check_quiz(self, quiz):
+        if not quiz["questions"]:
+            self.problems.append(f'line {quiz["line"]}: a quiz needs one <li> per question')
+        for question in quiz["questions"]:
+            line = question["line"]
+            if question["lists"] != 1 or question["choices"] < 2:
+                self.problems.append(f'line {line}: a quiz question needs one <ul class="choices"> with two or more <li> choices')
+            if question["correct"] != 1:
+                self.problems.append(f'line {line}: a quiz question needs exactly one <li data-correct> choice; found {question["correct"]}')
+            if question["why"] != 1:
+                self.problems.append(f'line {line}: a quiz question needs one <p class="why"> that explains the right answer')
+
+    def check_lesson(self, lesson):
+        if lesson["steps"] < LESSON_STEPS:
+            self.warn(lesson["line"], f"lesson {lesson['anchor']} has {lesson['steps']} <h3> step(s); teach it in {LESSON_STEPS} or more steps, starting from the problem the concept solves")
+
+    def close_element(self, tag):
+        for index in range(len(self.stack) - 1, -1, -1):
+            if self.stack[index]["tag"] != tag:
+                continue
+            closed = self.stack[index:]
+            del self.stack[index:]
+            for entry in reversed(closed):
+                if entry["kind"] == "quiz":
+                    self.check_quiz(entry["ref"])
+                elif entry["kind"] == "lesson":
+                    self.check_lesson(entry["ref"])
+            return
 
     def check_takeaway(self, tag, classes):
         section = self.open_sections[-1] if self.open_sections else None
@@ -293,6 +377,8 @@ class SourceScanner(HTMLParser):
         anchor = attributes.get("data-anchor")
         classes = (attributes.get("class") or "").split()
         line = self.getpos()[0] + self.line_offset
+        entry = {"tag": tag, "kind": None, "ref": None, "anchor": anchor.strip() if anchor and anchor.strip() else None}
+        self.track_lesson_markup(tag, attributes, classes, line, entry)
         self.check_takeaway(tag, classes)
         self.open_text_block(tag, classes, anchor, line)
         self.track_decision(tag, anchor, line)
@@ -317,7 +403,11 @@ class SourceScanner(HTMLParser):
             self.inside_title = self.titles == 1
         elif tag == "section":
             self.sections += 1
-            self.open_sections.append({"anchor": anchor or "", "line": line, "heading": None})
+            section = {"anchor": anchor or "", "line": line, "heading": None}
+            if "lesson" in classes or (anchor or "").startswith(LESSON_PREFIX):
+                section["lesson"] = entry["ref"] = self.open_lesson(anchor, attributes, classes, line)
+                entry["kind"] = "lesson"
+            self.open_sections.append(section)
             if not anchor:
                 self.problems.append(f'line {line}: <section> needs data-anchor="section:<key>"')
         elif tag == "h2" and self.open_sections and self.open_sections[-1]["heading"] is None:
@@ -331,6 +421,10 @@ class SourceScanner(HTMLParser):
             self.problems.append(f'line {line}: only <script type="{MERMAID_TYPE}"> diagrams belong in the content')
         elif tag == "pre" and "mermaid" in (attributes.get("class") or "").split():
             self.problems.append(f'line {line}: write diagrams as <script type="{MERMAID_TYPE}">, not <pre class="mermaid">')
+        if entry["anchor"]:
+            self.anchor_text.setdefault(entry["anchor"], [])
+        if tag not in VOID_TAGS:
+            self.stack.append(entry)
 
     def handle_endtag(self, tag):
         if tag == "span":
@@ -346,7 +440,9 @@ class SourceScanner(HTMLParser):
         elif tag == "h2" and self.heading_parts is not None:
             section = self.open_sections[-1]
             section["heading"] = " ".join("".join(self.heading_parts).split())
-            section["awaits_takeaway"] = section["anchor"] in TAKEAWAY_SECTIONS
+            section["awaits_takeaway"] = section["anchor"] in TAKEAWAY_SECTIONS or "lesson" in section
+            if "lesson" in section:
+                section["lesson"]["title"] = section["heading"]
             self.heading_parts = None
         elif tag == "section" and self.open_sections:
             self.check_takeaway("section", [])
@@ -355,8 +451,13 @@ class SourceScanner(HTMLParser):
                 self.problems.append(f"line {section['line']}: section {section['anchor']} needs an <h2> heading")
             else:
                 self.closed_sections.append(section)
+        if tag not in VOID_TAGS:
+            self.close_element(tag)
 
     def handle_data(self, data):
+        for entry in self.stack:
+            if entry["anchor"]:
+                self.anchor_text[entry["anchor"]].append(data)
         if self.inside_title:
             self.title_parts.append(data)
         if self.heading_parts is not None:
@@ -390,13 +491,54 @@ def content_problems(scanner):
     if scanner.sections == 0:
         problems.append('the content needs at least one <section data-anchor="section:<key>">')
     problems.extend(section_problems(scanner.closed_sections))
+    problems.extend(lesson_problems(scanner))
     return problems
+
+
+def lesson_problems(scanner):
+    targets = set(scanner.anchors) | {"page"}
+    return [
+        f'line {lesson["line"]}: lesson {lesson["anchor"]} has data-lesson-for="{lesson["for"]}", which no element of the design carries'
+        for lesson in scanner.lessons
+        if lesson["for"] and (lesson["for"] not in targets or lesson["for"].startswith(LESSON_PREFIX))
+    ]
+
+
+def lesson_warnings(scanner):
+    warnings = []
+    design = next((lesson for lesson in scanner.lessons if lesson["anchor"] == DESIGN_LESSON), None)
+    if not design:
+        warnings.append('the content needs <section class="lesson" data-anchor="lesson:design" data-lesson-for="page">: a lesson on the whole design that ends with a quiz')
+    elif design["for"] != "page":
+        warnings.append(f'line {design["line"]}: lesson:design teaches the whole design; set data-lesson-for="page"')
+    elif not design["quizzes"]:
+        warnings.append(f'line {design["line"]}: lesson:design needs a quiz (<ol class="quiz">) on the main decisions')
+    for lesson in scanner.lessons:
+        text = " ".join("".join(scanner.anchor_text.get(lesson["for"], [])).split()).lower()
+        if lesson["term"] and lesson["for"] != "page" and text and lesson["term"].lower() not in text:
+            warnings.append(f'line {lesson["line"]}: lesson {lesson["anchor"]} marks the term "{lesson["term"]}", which the text of {lesson["for"]} does not contain')
+    return warnings
+
+
+def is_request(comment):
+    return comment.get("kind") == "explain"
+
+
+def request_warnings(scanner, document):
+    lessons = {lesson["anchor"] for lesson in scanner.lessons}
+    return [
+        f"request {request.get('id')} is answered with {request['lesson']}, which the content no longer has; restore the lesson or answer the request again"
+        for request in document["comments"]
+        if is_request(request) and request.get("lesson") and request["lesson"] not in lessons
+    ]
 
 
 def content_warnings(scanner):
     warnings = list(scanner.warnings)
     if scanner.sections and not any(section["anchor"] == "section:summary" for section in scanner.closed_sections):
         warnings.append('the content needs <section data-anchor="section:summary"> first: what changes, for a reader who reads nothing else')
+    if scanner.sections:
+        warnings.extend(lesson_warnings(scanner))
     return warnings
 
 
@@ -443,7 +585,7 @@ def build(args):
         first_line = text.count("\n", 0, parsed[0].start("content")) + 1 if parsed else 1
         scanner = scan(content, first_line)
         problems = content_problems(scanner)
-        warnings = content_warnings(scanner)
+        warnings = content_warnings(scanner) + request_warnings(scanner, document)
         for problem in problems:
             print(f"problem: {problem}", file=sys.stderr)
         for warning in warnings:
@@ -453,11 +595,13 @@ def build(args):
             return 1
         page, build_id = render_page(content, document, scanner.title, feature_slug(path), args.lang)
         write_atomic(path, page)
-    open_comments = sum(1 for comment in document["comments"] if comment.get("status") != "resolved")
+    comments = [comment for comment in document["comments"] if not is_request(comment)]
+    requests = [comment for comment in document["comments"] if is_request(comment)]
     print(f"built {path}")
     print(f"title: {scanner.title}")
-    print(f"sections: {scanner.sections}, anchors: {len(scanner.anchors)}, diagrams: {scanner.diagrams}")
-    print(f"comments: {len(document['comments'])} ({open_comments} open)")
+    print(f"sections: {scanner.sections}, anchors: {len(scanner.anchors)}, diagrams: {scanner.diagrams}, lessons: {len(scanner.lessons)}")
+    print(f"comments: {len(comments)} ({sum(1 for comment in comments if comment.get('status') != 'resolved')} open)")
+    print(f"explanation requests: {len(requests)} ({sum(1 for request in requests if request.get('status') != 'resolved')} open)")
     print(f"warnings: {len(warnings)}" + ("; rewrite the text each warning names and build again" if warnings else ""))
     print(f"build: {build_id}")
     running = running_server(path)
@@ -528,6 +672,9 @@ def clean_point(value):
 
 def create_comment(path, data):
     now = utc_now()
+    kind = data.get("kind") or "comment"
+    if kind not in KINDS:
+        raise DesignError(f"kind must be one of {', '.join(KINDS)}")
     comment = {
         "id": "",
         "anchor": clean_text(data.get("anchor"), 500, "anchor", required=True),
@@ -540,6 +687,8 @@ def create_comment(path, data):
         "updatedAt": now,
         "replies": [],
     }
+    if kind == "explain":
+        comment["kind"] = kind
 
     def change(document):
         comment["id"] = new_comment_id({item.get("id") for item in document["comments"]})
@@ -588,6 +737,23 @@ def add_reply(path, comment_id, author, body, resolve=False):
             comment["status"] = "open"
         comment["updatedAt"] = now
         return comment
+
+    return mutate_comments(path, change)
+
+
+def add_lesson_answer(path, request_id, lesson, body):
+    text = clean_text(body, 10000, "answer", required=True)
+
+    def change(document):
+        request = find_comment(document, request_id)
+        if not is_request(request):
+            raise DesignError(f"{request_id} is a review comment, not an explanation request; answer it with reply")
+        now = utc_now()
+        request.setdefault("replies", []).append({"author": "agent", "body": text, "lesson": lesson, "createdAt": now})
+        request["lesson"] = lesson
+        request["status"] = "resolved"
+        request["updatedAt"] = now
+        return request
 
     return mutate_comments(path, change)
 
@@ -838,7 +1004,7 @@ def list_comments(args):
     path = design_file(args.design_file)
     _, match, document = load_page(path)
     anchors = set(scan(match.group("content")).anchors) | {"page"}
-    selected = [comment for comment in document["comments"] if args.all or comment.get("status") != "resolved"]
+    selected = [comment for comment in document["comments"] if not is_request(comment) and (args.all or comment.get("status") != "resolved")]
     if args.json:
         print(json.dumps(selected, ensure_ascii=False, indent=2))
         return 0
@@ -858,6 +1024,49 @@ def list_comments(args):
         print(f"comment:\n{indent(comment.get('body', ''))}")
         for reply in comment.get("replies", []):
             print(f"reply from {reply.get('author')}:\n{indent(reply.get('body', ''))}")
+    return 0
+
+
+def list_requests(args):
+    path = design_file(args.design_file)
+    _, match, document = load_page(path)
+    scanner = scan(match.group("content"))
+    anchors = set(scanner.anchors) | {"page"}
+    lessons = {lesson["anchor"] for lesson in scanner.lessons}
+    selected = [request for request in document["comments"] if is_request(request) and (args.all or request.get("status") != "resolved")]
+    if args.json:
+        print(json.dumps(selected, ensure_ascii=False, indent=2))
+        return 0
+    if not selected:
+        print("no explanation requests" if args.all else "no open explanation requests")
+        return 0
+    print(f"{len(selected)} {'explanation request(s)' if args.all else 'open explanation request(s)'} in {path}")
+    for request in selected:
+        flags = [request.get("status", "open")]
+        if request.get("anchor") not in anchors:
+            flags.append("outdated")
+        if request.get("lesson"):
+            flags.append(request["lesson"] if request["lesson"] in lessons else f"{request['lesson']} missing")
+        print(f"\n## {request.get('id')} · {' · '.join(flags)}")
+        print(f"location: {request.get('location') or request.get('anchor')}")
+        print(f"anchor: {request.get('anchor')}")
+        if request.get("quote"):
+            print(f"quote:\n{indent(request['quote'])}")
+        print(f"request:\n{indent(request.get('body', ''))}")
+        for message in request.get("replies", []):
+            print(f"reply from {message.get('author')}:\n{indent(message.get('body', ''))}")
+    return 0
+
+
+def answer(args):
+    path = design_file(args.design_file)
+    _, match, _ = load_page(path)
+    lesson = next((item for item in scan(match.group("content")).lessons if item["anchor"] == args.lesson), None)
+    if not lesson:
+        raise DesignError(f"{args.lesson} is not a lesson section in {path}; write the lesson into the content first")
+    text = sys.stdin.read() if args.text == "-" else args.text or f"Lesson ready: {lesson['title']}"
+    request = add_lesson_answer(path, args.request_id, args.lesson, text)
+    print(f"answered {request['id']} with {args.lesson} ({request['status']})")
     return 0
 
 
@@ -892,7 +1101,7 @@ def build_parser():
     status_command.add_argument("--wait", type=float, default=0, help="seconds to wait for the page to report the current build")
     status_command.set_defaults(handler=status)
 
-    comments_command = commands.add_parser("comments", help="print the review comments, open ones by default")
+    comments_command = commands.add_parser("comments", help="print the review comments, open ones by default; explanation requests are listed by requests")
     comments_command.add_argument("design_file")
     comments_command.add_argument("--all", action="store_true", help="include resolved comments")
     comments_command.add_argument("--json", action="store_true", help="print the selected comments as JSON")
@@ -904,6 +1113,19 @@ def build_parser():
     reply_command.add_argument("text", help="reply text, or - to read it from standard input")
     reply_command.add_argument("--resolve", action="store_true", help="mark the comment resolved")
     reply_command.set_defaults(handler=reply)
+
+    requests_command = commands.add_parser("requests", help="print the explanation requests, open ones by default")
+    requests_command.add_argument("design_file")
+    requests_command.add_argument("--all", action="store_true", help="include answered requests")
+    requests_command.add_argument("--json", action="store_true", help="print the selected requests as JSON")
+    requests_command.set_defaults(handler=list_requests)
+
+    answer_command = commands.add_parser("answer", help="close an explanation request with a reply that points to its lesson")
+    answer_command.add_argument("design_file")
+    answer_command.add_argument("request_id")
+    answer_command.add_argument("lesson", help="anchor of the lesson section that answers the request, for example lesson:postgres-view")
+    answer_command.add_argument("text", nargs="?", help="reply text, or - to read it from standard input; defaults to a line naming the lesson")
+    answer_command.set_defaults(handler=answer)
     return parser
 
 
