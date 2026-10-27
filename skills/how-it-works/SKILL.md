@@ -13,7 +13,7 @@ The helper `scripts/how_it_works.py` (Python 3, standard library only) builds an
 
 Settle three things from the conversation, the issue or spec, and the code: the subject, the reader, and what the reader must be able to do or tell apart after reading. Ask the user only what none of these answer.
 
-Read `docs/agents/how-it-works.md` when the repository has one: it is the project's capture recipe, naming where the screens come from (a prototype, a design site, a local environment, staging), how to sign in, the URL of each state, and the element to crop. Without it, find the screens yourself in that order: a running app or local environment, a published prototype or Storybook, a staging site. Ask the user for images only when you can open none of them.
+Read the repository's screen capture recipe when it has one: `docs/agents/screen-capture.md`, or the doc that `AGENTS.md` names for capturing screens. It names where the screens come from (a prototype, a design site, a local environment, staging), how to sign in, the URL of each state, and the element to crop. Without one, find the screens yourself in that order: a running app or local environment, a published prototype or Storybook, a staging site. Ask the user for images only when you can open none of them.
 
 List the steps the reader goes through, in the order they meet them. Give each step the one screen state that shows it. Collect the rules the subject enforces from the code, the spec, and the glossary, and the real names the product uses: button labels and screen titles as the interface spells them, glossary terms as the glossary writes them.
 
@@ -43,6 +43,6 @@ Write `.scratch/<slug>/content.html` with [references/sections.md](references/se
 - When your host publishes pages (a Claude artifact, for example), build again with `--fragment` and publish `how-it-works.fragment.html`.
 - Otherwise start `serve .scratch/<slug>/how-it-works.html` as a background process. It prints a local URL and reloads an open page after each build. On a remote host, give the URL the user can open from their machine.
 
-Send a short message with the link, the absolute path of `how-it-works.html`, and the sections and number of screens on the page. When you worked out a capture recipe the repository lacks, offer to save it as `docs/agents/how-it-works.md` for the next run. End the turn.
+Send a short message with the link, the absolute path of `how-it-works.html`, and the sections and number of screens on the page. End the turn.
 
 When the subject changes later, capture the changed screens again, edit `content.html`, and repeat step 4.

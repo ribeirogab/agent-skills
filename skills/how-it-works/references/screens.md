@@ -22,13 +22,3 @@ Read before capturing or recapturing the screens of a page.
 ## Links to the live screen
 
 Give a screen `data-href` with the plain URL of its state when the reader can open it (a prototype, a design site, staging); the carousel then offers to open the live screen. The reader signs in on their own, so the URL carries only the path and the state parameters.
-
-## The project recipe
-
-`docs/agents/how-it-works.md` keeps what the next run needs to capture the same screens without searching again. Write it, when the user agrees, with these sections:
-
-- **Screen source**: where the states live, such as a prototype site, a local environment command, or staging.
-- **Sign-in**: how the agent signs in, by the name of the environment variable or secret store that holds the credentials.
-- **State URLs**: the URL pattern of a state and where the list of states lives.
-- **Crop targets**: the selector of each element worth cropping on, such as the dialog panel or the bottom sheet.
-- **Capture setup**: the browser binary, package, or command that works on this machine.
