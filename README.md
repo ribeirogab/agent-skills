@@ -28,6 +28,16 @@ Works with Claude Code, Codex, Cursor, Gemini CLI, GitHub Copilot, and other age
 
 Your agent uses a skill when your request matches it. To call one by name, type `/show-design` in Claude Code or `$show-design` in Codex. `goal-prompt` runs only when you call it.
 
+## My workflow
+
+This is how I use these skills, together with [Matt Pocock's skills](https://github.com/mattpocock/skills):
+
+1. `/grill-with-docs`: answer questions until the plan is clear.
+2. `/show-design`: review the technical design before I write the spec.
+3. `/to-spec` and `/to-tickets`: turn the design into an issue and sub-issues.
+4. `/goal-prompt <issue>`: write the goal, then run it with `/goal`.
+5. `/how-it-works`: show the finished feature to other people.
+
 ## License
 
 [MIT](LICENSE)
