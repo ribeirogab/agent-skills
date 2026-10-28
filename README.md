@@ -4,11 +4,9 @@ A small set of [Agent Skills](https://agentskills.io) for AI coding agents: plan
 
 ## Skills
 
-| Skill | What it does |
-| --- | --- |
-| [show-design](skills/show-design/SKILL.md) | Turns a planned change into an HTML design doc with diagrams, the file tree, and the data model. You review it with inline comments before you write the spec. |
-| [how-it-works](skills/how-it-works/SKILL.md) | Builds an HTML walkthrough of a feature, a user flow, or a whole product, screen by screen, from real screenshots. |
-| [goal-prompt](skills/goal-prompt/SKILL.md) | Asks a few questions about an issue or a conversation, then writes a `/goal` prompt with done criteria you can check. |
+- **[show-design](skills/show-design/SKILL.md)**: turns a planned change into an HTML design doc with diagrams, the file tree, and the data model. You review it with inline comments before you write the spec.
+- **[how-it-works](skills/how-it-works/SKILL.md)**: builds an HTML walkthrough of a feature, a user flow, or a whole product, screen by screen, from real screenshots.
+- **[goal-prompt](skills/goal-prompt/SKILL.md)**: asks a few questions about an issue or a conversation, then writes a `/goal` prompt with done criteria you can check.
 
 ## Install
 
