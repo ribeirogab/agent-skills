@@ -46,6 +46,10 @@ This is how I use these skills, together with [Matt Pocock's skills](https://git
 4. `/goal-prompt <issue>`: write the goal, then run it with `/goal`.
 5. `/how-it-works`: show the finished feature to other people.
 
+## Versioning
+
+The plugin version in [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json) is a date, `YYYY.MM.DD-N`, where `N` counts the releases of that day. Every pull request that changes a skill sets it to the current date. Claude Code users get an update only when the version changes.
+
 ## License
 
 [MIT](LICENSE)
