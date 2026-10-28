@@ -1,7 +1,6 @@
 ---
 name: goal-prompt
 description: Writes a /goal prompt from an issue link or a slice of the conversation, after rounds of questions that each carry a recommended answer.
-disable-model-invocation: true
 ---
 
 # goal-prompt
