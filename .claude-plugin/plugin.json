@@ -1,0 +1,11 @@
+{
+  "name": "ribeirogab",
+  "version": "2026.10.27-1",
+  "description": "Plan a change, show how a product works, and set a clear goal.",
+  "author": {
+    "name": "Gabriel Ribeiro",
+    "url": "https://github.com/ribeirogab"
+  },
+  "repository": "https://github.com/ribeirogab/agent-skills",
+  "license": "MIT"
+}

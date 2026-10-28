@@ -1,0 +1,15 @@
+{
+  "name": "ribeirogab-skills",
+  "description": "Agent Skills by ribeirogab.",
+  "owner": {
+    "name": "Gabriel Ribeiro",
+    "url": "https://github.com/ribeirogab"
+  },
+  "plugins": [
+    {
+      "name": "ribeirogab",
+      "source": "./",
+      "description": "Plan a change, show how a product works, and set a clear goal."
+    }
+  ]
+}

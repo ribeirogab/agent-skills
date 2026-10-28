@@ -22,6 +22,16 @@ npx skills add ribeirogab/agent-skills --skill show-design
 
 Works with Claude Code, Codex, Cursor, Gemini CLI, GitHub Copilot, and other agents that support Agent Skills. `show-design` and `how-it-works` need Python 3.
 
+### Claude Code plugin
+
+Run this in Claude Code:
+
+```
+/plugin install ribeirogab --marketplace ribeirogab/agent-skills
+```
+
+The skills then have the `ribeirogab:` prefix, for example `/ribeirogab:show-design`.
+
 ## Usage
 
 Your agent uses a skill when your request matches it. To call one by name, type `/show-design` in Claude Code or `$show-design` in Codex. `goal-prompt` runs only when you call it.
@@ -35,6 +45,10 @@ This is how I use these skills, together with [Matt Pocock's skills](https://git
 3. `/to-spec` and `/to-tickets`: turn the design into an issue and sub-issues.
 4. `/goal-prompt <issue>`: write the goal, then run it with `/goal`.
 5. `/how-it-works`: show the finished feature to other people.
+
+## Versioning
+
+The plugin version in [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json) is a date, `YYYY.MM.DD-N`, where `N` counts the releases of that day. Every pull request that changes a skill sets it to the current date. Claude Code users get an update only when the version changes.
 
 ## License
 
