@@ -34,7 +34,7 @@ The skills then have the `ribeirogab:` prefix, for example `/ribeirogab:show-des
 
 ## Usage
 
-Your agent uses a skill when your request matches it. To call one by name, type `/show-design` in Claude Code or `$show-design` in Codex. `goal-prompt` runs only when you call it.
+Your agent uses a skill when your request matches it. To call one by name, type `/show-design` in Claude Code or `$show-design` in Codex.
 
 ## My workflow
 
