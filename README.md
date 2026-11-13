@@ -1,12 +1,13 @@
 # agent-skills
 
-A small set of [Agent Skills](https://agentskills.io) for AI coding agents: plan a change, show how a product works, and set a clear goal.
+A small set of [Agent Skills](https://agentskills.io) for AI coding agents: plan a change, show how a product works, set a clear goal, and coordinate a delivery.
 
 ## Skills
 
 - **[show-design](skills/show-design/SKILL.md)**: turns a planned change into an HTML design doc with diagrams, the file tree, and the data model. You review it with inline comments before you write the spec.
 - **[how-it-works](skills/how-it-works/SKILL.md)**: builds an HTML walkthrough of a feature, a user flow, or a whole product, screen by screen, from real screenshots.
 - **[goal-prompt](skills/goal-prompt/SKILL.md)**: asks a few questions about an issue or a conversation, then writes a `/goal` prompt with done criteria you can check.
+- **[delivery-coordinator](skills/delivery-coordinator/SKILL.md)**: makes the agent the coordinator of a delivery split into stages. It shows you the plan, and after your ok it runs one worker per stage, relays their questions, and asks for your ok before each production deploy.
 
 ## Install
 
@@ -43,7 +44,7 @@ This is how I use these skills, together with [Matt Pocock's skills](https://git
 1. `/grill-with-docs`: answer questions until the plan is clear.
 2. `/show-design`: review the technical design before I write the spec.
 3. `/to-spec` and `/to-tickets`: turn the design into an issue and sub-issues.
-4. `/goal-prompt <issue>`: write the goal, then run it with `/goal`.
+4. `/goal-prompt <issue>`: write the goal, then run it with `/goal`. For an issue with sub-issues, `/delivery-coordinator <issue>` runs them with workers instead.
 5. `/how-it-works`: show the finished feature to other people.
 
 ## Versioning
