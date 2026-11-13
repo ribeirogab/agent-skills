@@ -85,7 +85,7 @@ Workers run on their own. Between events, end your turn: worker notifications an
 
 After each event, rewrite the stage block in `status.md` and append a line to `log.md`.
 
-The user hears from you for decisions, credentials, production oks, and actions only they can take, such as a console login. Keep these under `## Waiting for the user` in `status.md`, and send them together in one message, each with your recommended answer.
+The user hears from you for decisions, credentials, production oks, and actions only they can take, such as a console login. Keep these under `## Waiting for the user` in `status.md`, and send them together through your harness's question tool, in as few calls as it allows, each with your recommended answer as the first option. While workers run, the harness shows you as working, and a question in your reply alone stays out of the user's sight. Without a question tool, send them in one message at the end of your turn.
 
 **Ready when:** every stage is in production, validated, with its evidence on the parent issue and its issue in the done state.
 
