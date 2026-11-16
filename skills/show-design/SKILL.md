@@ -35,7 +35,7 @@ On a built page, edit only the content between `<main class="design" id="design"
 
 1. `build <design-file> --lang <content-language-tag>` validates the content and rewrites the file as the complete page. A problem stops the build; a warning names text that is hard to read: a long decision, a long sentence, a section or lesson without a takeaway, a lesson with fewer than two steps, a missing summary or design lesson, or a first diagram with too many nodes. Fix every problem and rewrite the text of every warning, then build again.
 2. Start `serve <design-file>` detached from your shell, so a time limit on background commands does not stop it during the review: `nohup python3 <skill-dir>/scripts/show_design.py serve <design-file> > <design-dir>/serve.log 2>&1 &`, then read the URL from `serve.log`. It reuses a server already running for the file.
-3. Open the URL for the user: in your browser preview tool when you have one, otherwise run `serve` with `--open`. On a remote host, follow the user's own rule for remote pages when one exists. Otherwise publish the port with your harness's port tool when it has one (in T3 Code, `publish_port` with `hostRewrite: true`, because the server accepts only a `127.0.0.1` Host), and give the URL it returns. Without such a tool, give the URL with the SSH port-forward command for its port.
+3. Open the URL for the user: in your browser preview tool when you have one, otherwise run `serve` with `--open`. On a remote host, give the URL with the SSH port-forward command for its port.
 4. `status <design-file> --wait 30` reads the render report the open page sends. Fix each failed diagram, rebuild, and check again.
 
 **Ready when:** the build reports no problem and no warning, and `status` reports that every diagram rendered for the current build.
@@ -46,4 +46,4 @@ Send a short message with the URL, the absolute path of `design.html` (the file 
 
 When the plan changes later, edit the content and repeat step 3. An open page reloads by itself when a new build lands.
 
-When the review ends, run `stop <design-file>`, and turn off the port you published (in T3 Code, `unpublish_port`).
+When the review ends, run `stop <design-file>`.
