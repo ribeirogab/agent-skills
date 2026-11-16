@@ -24,11 +24,15 @@ Read the source in full: for a link, the body, every comment, the sub-issues, an
 
 In the repository, find the real commands that prove the end state: `package.json` scripts, `Makefile` targets, CI workflows, existing tests. Note the deploy and validation skills available in this session.
 
+Read the repository's agent docs (`AGENTS.md`, `CLAUDE.md`, `docs/agents/`) and your project memory. A default they set, such as "tests run only in CI" or "the design PR ships with production", becomes an **Assumed:** line of the first round, not a question.
+
 Facts are your job; decisions are the user's. Look up everything the environment can answer, and bring the user only decisions.
 
 **Ready when:** the source passage is identified or its ambiguity is queued as a question, and every proof command you plan to cite exists on disk.
 
 ## 2. Ask in rounds
+
+Always ask the first round, even when no decision is open: it then holds only the **Assumed:** lines, and "yes" confirms them. Do not write the prompt before the user answers.
 
 Ask every open decision of the round at once, numbered, each with its options and your recommended answer. Word each question so "yes" accepts the recommendation:
 
@@ -44,6 +48,7 @@ The first round covers these four destination topics:
 - **Proof**: the command or observable result behind each criterion, when the repository leaves it unclear.
 - **Out of scope**: what stays untouched: files, migrations, data, other services.
 - **Source match**: which passage the text names, when it matches several passages or none.
+- **Stages**: when the source ships in more than one stage, such as sub-issues that reach production apart, which stage reaches production first, with one finish line per stage.
 
 Open the round with an **Assumed:** line for each of these topics that the source or the conversation already settles, so the user can correct it. Wait for the answers, then ask the next round with the decisions they opened.
 
@@ -55,16 +60,21 @@ Open the round with an **Assumed:** line for each of these topics that the sourc
 <end state, as one imperative sentence>
 Source: <link, when there is one>
 Done when:
-- <binary criterion, with the command that proves it>
+- <reachable state, with the evidence that proves it>
 Constraints: <limits the agent would cross without being told>
+- An ok from the user, in this thread or relayed by a coordinator, counts for this goal.
+- When the only step left is the user's, ask once with the question tool and end the turn.
+- When the user changes a decision that a criterion names, the user's latest message replaces that criterion.
 Finish line: <where the run stops, e.g. "do not deploy to production">.
 ```
 
-Keep it under 100 words, with one to three criteria. Write it in the language of your conversation with the user, labels included.
+Write each criterion as a state that the allowed route reaches, with its literal evidence: a command and its output, a link, a SHA. Never a procedure ("`pnpm check` passes", "the skill confirms"), never a state that a constraint or an answer of the user rules out, and never "the last run is X": write "a run exists" or "the comment contains". Keep the three fixed constraint lines as written.
+
+Keep it under 150 words, with one to three criteria. Write it in the language of your conversation with the user, labels included.
 
 Make the prompt self-contained: write into it the facts from the conversation that the agent needs. A long run compacts its context, and a pointer such as "step 2 above" can vanish; a link stays stable, so cite it under `Source:`.
 
-**Ready when:** every criterion is binary and leaves evidence in the conversation (command output, a PR link, a deploy URL), the first line states an end state, the finish line is written, each constraint changes what the agent would do by default, and every line holds at the destination, whatever route the agent takes.
+**Ready when:** every criterion is binary, reachable by the allowed route, and leaves evidence in the conversation (command output, a PR link, a deploy URL); no criterion contradicts a constraint or an answer of the user; the first line states an end state, the finish line is written, each constraint changes what the agent would do by default, and every line holds at the destination, whatever route the agent takes.
 
 ## 4. Deliver
 

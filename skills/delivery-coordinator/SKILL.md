@@ -34,7 +34,7 @@ Facts are your job; decisions are the user's. Look up everything the environment
 
 ## 2. Show the plan and wait
 
-Fill `plan.md` from the template with status `draft`, `status.md` with one block per stage, and `## Waiting for the user` with the open decisions and inputs. The plan covers the stages and what stays out of scope, the roles and the worker model (by default your own model and effort), the stage cycle with every gate, the waves with the maximum number of workers at the same time (default 2), the start rule, and the evidence each stage leaves. The start rule by default: the plan ok starts wave 1, each next wave starts when its dependencies are done, and production takes one ok per stage.
+Fill `plan.md` from the template with status `draft`, `status.md` with one block per stage, and `## Waiting for the user` with the open decisions and inputs. The plan covers the stages and what stays out of scope, the roles and the worker model (by default your own model and effort), the stage cycle with every gate, the waves with the maximum number of workers at the same time (default 2), the start rule, and the evidence each stage leaves. The start rule by default: wave 1 starts on the user's explicit order to start it, such as "start wave 1"; each next wave starts when its dependencies are done, and production takes one ok per stage. An ok on the plan, a design, a video, or a spec approves that artifact and starts nothing.
 
 Send the full plan as your chat message, then every open decision, numbered, each with its options and your recommended answer. Word each one so "yes" accepts the recommendation:
 
@@ -46,7 +46,7 @@ Send the full plan as your chat message, then every open decision, numbered, eac
 
 After the decisions, list the inputs only the user has, each with the wave that needs it. Close with one line: "ok" approves the plan with every recommendation; a number with a change adjusts it. End the turn.
 
-A reply that changes something updates `plan.md`; show the changed parts and wait again. Until the ok, the run only reads and researches: workers, branches, issue writes, and deploys start after it.
+A reply that changes something updates `plan.md`; show the changed parts and wait again. Until the order to start, the run only reads and researches: workers, branches, issue writes, and deploys start after it.
 
 **Ready when:** the user's reply approves the plan.
 
@@ -57,7 +57,11 @@ A reply that changes something updates `plan.md`; show the changed parts and wai
 - Create the issues the plan proposed, with the issue tracker skill of the session; keep the exact text in `tracker/`.
 - `status.md`: the stage blocks and `## Waiting for the user` brought up to date. `log.md`: the approval.
 
+Then ask "Can I start wave 1?" with one line on what starts, and end the turn. Wave 1 starts only on the user's explicit order to start.
+
 ## 4. Start a wave
+
+Before you start or resume a worker, count the workers that run now in `status.md`, and check the free memory of the machine (`free -g` on Linux, `memory_pressure` on macOS). Start it only while the count stays within the maximum of `plan.md` (default 2) and the memory stays above the limit you noted in step 1. Count a resumed worker as a running one.
 
 For each stage of the wave:
 

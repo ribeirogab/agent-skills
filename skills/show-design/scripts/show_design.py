@@ -965,6 +965,17 @@ def serve(args):
     return 0
 
 
+def stop(args):
+    path = design_file(args.design_file)
+    running = running_server(path)
+    if not running:
+        print(f"no server is running for {path}")
+        return 0
+    os.kill(running["pid"], signal.SIGTERM)
+    print(f"stopped the server of {path} at {running['url']}")
+    return 0
+
+
 def status(args):
     path = design_file(args.design_file)
     build_id = page_build(path.read_text(encoding="utf-8"))
@@ -1095,6 +1106,10 @@ def build_parser():
     serve_command.add_argument("--port", type=int, help="port to bind instead of the stable port derived from the file path")
     serve_command.add_argument("--open", action="store_true", help="open the page in the default browser")
     serve_command.set_defaults(handler=serve)
+
+    stop_command = commands.add_parser("stop", help="stop the server that serve started for the page")
+    stop_command.add_argument("design_file")
+    stop_command.set_defaults(handler=stop)
 
     status_command = commands.add_parser("status", help="report whether every diagram of the current build rendered in the open page")
     status_command.add_argument("design_file")

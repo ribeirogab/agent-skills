@@ -39,7 +39,7 @@ How to work.
 - When the user writes to you directly, follow it and record it in your file with `user` as the source.
 - A credential reaches you only through <the secret tool of your harness>, after the coordinator says it is ready.
 - Test environment: deploy and validate on your own. Production and production data: only after the forwarded ok.
-- Cycle: <the stage cycle of plan.md, with its real skills, commands, labels, and states>.
+- Cycle: <the stage cycle of plan.md, with its real skills, commands, labels, and states>. Gates: <every gate of that cycle, copied word for word from plan.md, such as the review approval before the test environment deploy>. A gate is a hard stop: do not pass it without its evidence.
 - Limits: <machine and repository limits>.
 
 Stop point. <where this stage stops before the production ok>. Update your file, then report: PR URLs, head SHA, checks and review state, and the validation report link.
